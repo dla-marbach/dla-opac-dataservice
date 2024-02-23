@@ -1,0 +1,711 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "DLA Data+ API",
+        "description": "Daten des Quellenrepertoriums der Exilbibliotheken von Alfred Döblin und Siegfried Kracauer",
+        "termsOfService": "https://www.dla-marbach.de/service/benutzung-bibliothek/",
+        "contact": {
+            "name": "Deutsches Literaturarchiv Marbach",
+            "url": "https://www.dla-marbach.de/kontakt/"
+        },
+        "license": {
+            "name": "Creative Commons Attribution 4.0 International",
+            "url": "https://creativecommons.org/licenses/by/4.0/legalcode"
+        },
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "description": "Live-System (öffentlich)",
+            "url": "https://dataservice.dla-marbach.de/v1"
+        },
+        {
+            "description": "Test-System (intern)",
+            "url": "https://dataservice-test.dla-marbach.de/v1"
+        }
+    ],
+    "paths": {
+        "/info": {
+            "get": {
+                "description": "Diese offene Schnittstelle enthält die bibliographischen Daten des Quellenrepertoriums der Exilbibliotheken von [Alfred Döblin](https://www.dla-marbach.de/bibliothek/projekte/quellenrepertorium-alfred-doeblin) und [Siegfried Kracauer](https://www.dla-marbach.de/bibliothek/spezialsammlungen/bestandsliste/bibliothek-siegfried-kracauer/).\n\nSie wurde im Rahmen des Projekts \"Data+\" mit Unterstützung des NFDI-Konsortiums [Text+](https://text-plus.org/) und Förderung der Deutschen Forschungsgemeinschaft entwickelt.\n\n*Bitte beachten Sie auch die [Benutzungsordnung](https://www.dla-marbach.de/service/benutzung-bibliothek/).*",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/info/schema": {
+            "get": {
+                "description": "Liefert Informationen über alle selektierbaren Felder im Suchindex und ihre Datentypen.",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/collections": {
+            "get": {
+                "description": "Liefert eine Liste der verfügbaren Kollektionen.",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/collection/{id}.{format}": {
+            "get": {
+                "description": "Liefert alle Datensätze der Kollektion {id} im Format {format}.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/collectionId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/formatInPath"
+                    },
+                    {
+                        "$ref": "#/components/parameters/fields"
+                    },
+                    {
+                        "$ref": "#/components/parameters/from"
+                    },
+                    {
+                        "$ref": "#/components/parameters/size"
+                    },
+                    {
+                        "$ref": "#/components/parameters/sort"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/records": {
+            "get": {
+                "description": "Liefert eine Liste von Datensätzen, auf die die gegebenen Suchkriterien zutreffen.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/query"
+                    },
+                    {
+                        "$ref": "#/components/parameters/formatInQuery"
+                    },
+                    {
+                        "$ref": "#/components/parameters/fields"
+                    },
+                    {
+                        "$ref": "#/components/parameters/from"
+                    },
+                    {
+                        "$ref": "#/components/parameters/size"
+                    },
+                    {
+                        "$ref": "#/components/parameters/sort"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/records/count": {
+            "get": {
+                "description": "Liefert die Anzahl von Datensätzen, auf die die gegebenen Suchkriterien zutreffen.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/record/{id}.{format}": {
+            "get": {
+                "description": "Liefert den Datensatz {id} im Format {format}.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/formatInPath"
+                    },
+                    {
+                        "$ref": "#/components/parameters/fields"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "parameters": {
+            "id": {
+                "name": "id",
+                "in": "path",
+                "description": "Eindeutige ID eines bibliographischen Datensatzes.",
+                "required": true,
+                "style": "simple",
+                "schema": {
+                    "type": "string"
+                },
+                "example": "AK12345678"
+            },
+            "collectionId": {
+                "name": "id",
+                "in": "path",
+                "description": "Eindeutige ID eines Sammlungsdatensatzes.\n\nEine Liste aller verfügbaren Sammlungen liefert der Endpunkt [/collections](/collections).",
+                "required": true,
+                "style": "simple",
+                "schema": {
+                    "type": "string"
+                },
+                "example": "6"
+            },
+            "formatInPath": {
+                "name": "format",
+                "in": "path",
+                "description": "Ausgabeformat der Datensätze.",
+                "required": true,
+                "style": "simple",
+                "schema": {
+                    "type": "string",
+                    "enum": [
+                        "json",
+                        "jsonl",
+                        "ris",
+                        "mods",
+                        "dc"
+                    ]
+                }
+            },
+            "formatInQuery": {
+                "name": "format",
+                "in": "query",
+                "description": "Ausgabeformat der Datensätze.",
+                "required": false,
+                "style": "form",
+                "schema": {
+                    "type": "string",
+                    "enum": [
+                        "json",
+                        "jsonl",
+                        "ris",
+                        "mods",
+                        "dc"
+                    ],
+                    "default": "json"
+                }
+            },
+            "fields": {
+                "name": "fields",
+                "in": "query",
+                "description": "Liste der Felder, die je Datensatz ausgegeben werden sollen.\n\nEine Liste der unterstützten Felder liefert der Endpunkt [/info/schema](/info/schema).\n\n*Eine Feldauswahl ist nur für die Ausgabeformate* `json` *und* `jsonl` *möglich!*",
+                "required": false,
+                "style": "form",
+                "explode": false,
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "accession_display",
+                            "accession_id",
+                            "accessionNumber",
+                            "accessLevel",
+                            "acronym_mv",
+                            "broadcastDate",
+                            "broadcastStation",
+                            "callNumberBibliographic_mv",
+                            "callNumberCollection_mv",
+                            "callNumberItem",
+                            "callNumberItemSuffix",
+                            "callNumberReadingRoom",
+                            "category",
+                            "categoryContent_mv",
+                            "categoryEntity_mv",
+                            "categoryIndex_mv",
+                            "categoryMedia_mv",
+                            "categoryMedium_mv",
+                            "categoryPublication_mv",
+                            "categorySub",
+                            "categorySubSub",
+                            "child_display_mv",
+                            "child_id_mv",
+                            "classificationAuthor_display_mv",
+                            "classificationAuthor_id_mv",
+                            "classificationChain",
+                            "classification_display_mv",
+                            "classificationForm_display_mv",
+                            "classificationForm_id_mv",
+                            "classification_id_mv",
+                            "classificationNewspaper_comment_mv",
+                            "classificationNewspaper_text_mv",
+                            "classificationOther_comment_mv",
+                            "classificationOther_text_mv",
+                            "classificationSubject_display_mv",
+                            "classificationSubject_id_mv",
+                            "classificationSubjectOther_mv",
+                            "confidential",
+                            "content",
+                            "corporationAbout_comment_mv",
+                            "corporationAbout_display_mv",
+                            "corporationAbout_id_mv",
+                            "corporationAbout_role_mv",
+                            "corporationAbout_type_mv",
+                            "corporationAt_display_mv",
+                            "corporationAt_id_mv",
+                            "corporationBy_comment_mv",
+                            "corporationByConference_creator_mv",
+                            "corporationByConference_display_mv",
+                            "corporationByConference_id_mv",
+                            "corporationByConference_role_mv",
+                            "corporationBy_creator_mv",
+                            "corporationBy_display_mv",
+                            "corporationBy_id_mv",
+                            "corporationBy_role_mv",
+                            "corporationByTerritory_creator_mv",
+                            "corporationByTerritory_display_mv",
+                            "corporationByTerritory_id_mv",
+                            "corporationByTerritory_role_mv",
+                            "corporationBy_type_mv",
+                            "corporation_display_mv",
+                            "corporation_id_mv",
+                            "corporationTo_comment_mv",
+                            "corporationTo_display_mv",
+                            "corporationTo_id_mv",
+                            "corporationTo_type_mv",
+                            "country_mv",
+                            "dateActivityEnd",
+                            "dateActivityStart",
+                            "dateCataloged",
+                            "dateLifespanComment_mv",
+                            "dateLifespanEnd",
+                            "dateLifespanStart",
+                            "dateModified",
+                            "dateNote_mv",
+                            "dateOrigin",
+                            "dateOriginComment_mv",
+                            "dateOriginEnd",
+                            "dateOriginStart",
+                            "dateOtherComment_mv",
+                            "dateOther_mv",
+                            "dateRetention",
+                            "department",
+                            "description_text_mv",
+                            "description_type_mv",
+                            "digitalObject_display_mv",
+                            "digitalObject_id_mv",
+                            "dimension_comment_mv",
+                            "dimension_depth_mv",
+                            "dimension_diameter_mv",
+                            "dimension_height_mv",
+                            "dimension_width_mv",
+                            "display",
+                            "edition",
+                            "editionNormalized",
+                            "enveloped",
+                            "extent",
+                            "extentFormat",
+                            "extentIllustrations_mv",
+                            "extentSupplements",
+                            "Feldbezeichnung",
+                            "filePath",
+                            "filterCollection_mv",
+                            "gender",
+                            "genre",
+                            "genreOther_mv",
+                            "genreSub",
+                            "genreSubOther_mv",
+                            "gnd_id_mv",
+                            "gndRelation_comment_mv",
+                            "gndRelation_id_mv",
+                            "gndRelation_text_mv",
+                            "gndRelation_type_mv",
+                            "gnd_type_mv",
+                            "headword_mv",
+                            "holding_display_mv",
+                            "holding_id_mv",
+                            "host_display_mv",
+                            "host_id_mv",
+                            "id",
+                            "identifier_id_mv",
+                            "identifier_type_mv",
+                            "index",
+                            "inscription",
+                            "inventory",
+                            "inventoryMissing",
+                            "inventoryNumber",
+                            "isbn_mv",
+                            "ismn_mv",
+                            "issn_mv",
+                            "item_display_mv",
+                            "item_holding_display_mv",
+                            "item_holding_id_mv",
+                            "item_id_mv",
+                            "itemization_extent_mv",
+                            "itemization_status_mv",
+                            "itemization_unit_mv",
+                            "itemNumber",
+                            "journalIssue_display_mv",
+                            "journalIssue_id_mv",
+                            "language_mv",
+                            "languageOriginal_mv",
+                            "library_display_mv",
+                            "library_id_mv",
+                            "locationBoxNumber",
+                            "locationComment",
+                            "locationFolderNumber",
+                            "location_mv",
+                            "manifestation_display",
+                            "manifestation_id",
+                            "manuscript_display_mv",
+                            "manuscript_id_mv",
+                            "material",
+                            "mediaNumber",
+                            "microform_mv",
+                            "nameAlternative_comment_mv",
+                            "nameAlternative_name_mv",
+                            "nameAlternative_suffix_mv",
+                            "nameAlternative_type_mv",
+                            "nameFormerOrLater_display_mv",
+                            "nameFormerOrLater_id_mv",
+                            "nameOriginal_mv",
+                            "nameTemporary_display_mv",
+                            "nameTemporary_id_mv",
+                            "notation",
+                            "note",
+                            "noteBibliography_mv",
+                            "noteClassification",
+                            "noteContent_mv",
+                            "noteDimension",
+                            "noteExplanatory_text_mv",
+                            "noteExplanatory_type_mv",
+                            "noteFootnote_text_mv",
+                            "noteFootnote_type_mv",
+                            "noteObjectType",
+                            "noteOther_mv",
+                            "noteProvenance_text_mv",
+                            "noteProvenance_type_mv",
+                            "noteRemark_text_mv",
+                            "noteRemark_type_mv",
+                            "noteRequirements_mv",
+                            "object_display",
+                            "object_id",
+                            "occupation_mv",
+                            "order_extent_mv",
+                            "order_status_mv",
+                            "order_unit_mv",
+                            "parent_display_mv",
+                            "parent_id_mv",
+                            "parentIssueDate",
+                            "parentIssueNumber",
+                            "parentIssuePage",
+                            "parentIssueVolume",
+                            "parentIssueYear",
+                            "parentIssueYearVolume",
+                            "parentTitleOriginal_mv",
+                            "parent_type_mv",
+                            "parentVolume_mv",
+                            "parentVolumeNormalized_mv",
+                            "parentVolumeTotal",
+                            "personAbout_comment_mv",
+                            "personAbout_display_mv",
+                            "personAbout_id_mv",
+                            "personAbout_role_mv",
+                            "personAt_display_mv",
+                            "personAt_id_mv",
+                            "personBy_comment_mv",
+                            "personBy_creator_mv",
+                            "personBy_display_mv",
+                            "personBy_id_mv",
+                            "personBy_role_mv",
+                            "person_display_mv",
+                            "person_id_mv",
+                            "personTo_comment_mv",
+                            "personTo_display_mv",
+                            "personTo_id_mv",
+                            "personTo_role_mv",
+                            "photoNegativeNumber_mv",
+                            "placeBirth",
+                            "placeDeath",
+                            "place_mv",
+                            "predecessor_display_mv",
+                            "predecessor_id_mv",
+                            "provenance",
+                            "publicationHistory",
+                            "publisher_display_mv",
+                            "publisher_id_mv",
+                            "publisherOriginalLocation_mv",
+                            "publisherOriginal_text_mv",
+                            "publisherOriginal_type_mv",
+                            "reference_text_mv",
+                            "reference_type_mv",
+                            "relation_display_mv",
+                            "relation_id_mv",
+                            "relation_type_mv",
+                            "schemaVersion",
+                            "scholarlyPublication_date_mv",
+                            "scholarlyPublication_location_mv",
+                            "scholarlyPublication_text_mv",
+                            "scholarlyPublication_type_mv",
+                            "seeAlso_display_mv",
+                            "seeAlso_id_mv",
+                            "sequence_mv",
+                            "sortingKey",
+                            "sortingKeySub",
+                            "sortingTitleMain",
+                            "sortingTitleOther",
+                            "statusCataloging",
+                            "statusEditing",
+                            "statusItem",
+                            "statusJournalReview",
+                            "statusLoan",
+                            "statusPreservation",
+                            "storageArea",
+                            "subject_display_mv",
+                            "subject_id_mv",
+                            "subjectLocation_comment_mv",
+                            "subjectLocation_display_mv",
+                            "subjectLocation_id_mv",
+                            "subjectLocation_type_mv",
+                            "subjectOther_mv",
+                            "subject_type_mv",
+                            "subseries",
+                            "successor_display_mv",
+                            "successor_id_mv",
+                            "title",
+                            "titleMain_category",
+                            "titleMain_comment",
+                            "titleMain_text",
+                            "titleMain_type",
+                            "titleOriginal",
+                            "titleOther_category_mv",
+                            "titleOther_comment_mv",
+                            "titleOther_language_mv",
+                            "titleOther_text_mv",
+                            "titleOther_type_mv",
+                            "titlePrefix",
+                            "titleResponsability",
+                            "titleResponsabilityFull",
+                            "titleShort",
+                            "titleSuffix",
+                            "titleType",
+                            "url",
+                            "usageRestriction",
+                            "usageRestrictionComment",
+                            "usedFor_display_mv",
+                            "usedFor_id_mv",
+                            "useTerm_display_mv",
+                            "useTerm_id_mv",
+                            "vendor_id_mv",
+                            "vendor_type_mv",
+                            "virtualRecording",
+                            "website_description_mv",
+                            "website_url_mv",
+                            "workAbout_display_mv",
+                            "workAbout_id_mv",
+                            "workCompilation_display_mv",
+                            "workCompilation_id_mv",
+                            "work_display_mv",
+                            "work_id_mv"
+                        ],
+                        "minLength": 1,
+                        "uniqueItems": true
+                    },
+                    "minItems": 1,
+                    "default": [
+                        "accession_id",
+                        "accessionNumber",
+                        "accession_display",
+                        "category",
+                        "categorySub",
+                        "categoryMedium_mv",
+                        "categoryPublication_mv",
+                        "child_id_mv",
+                        "child_display_mv",
+                        "corporation_id_mv",
+                        "corporationAbout_display_mv",
+                        "corporationAbout_id_mv",
+                        "corporationAt_display_mv",
+                        "corporationAt_id_mv",
+                        "corporationBy_display_mv",
+                        "corporationBy_id_mv",
+                        "corporationTo_id_mv",
+                        "country_mv",
+                        "dateCataloged",
+                        "dateOrigin",
+                        "display",
+                        "digitalObject_id_mv",
+                        "digitalObject_display_mv",
+                        "exportRIS",
+                        "extent",
+                        "genreOther_mv",
+                        "item_id_mv",
+                        "item_display_mv",
+                        "language_mv",
+                        "languageOriginal_mv",
+                        "gnd_id_mv",
+                        "gndRelation_id_mv",
+                        "gndRelation_text_mv",
+                        "gndRelation_type_mv",
+                        "gndRelation_comment_mv",
+                        "id",
+                        "mediaNumber",
+                        "note",
+                        "noteOther_mv",
+                        "parent_display_mv",
+                        "parent_id_mv",
+                        "personAbout_id_mv",
+                        "personAbout_display_mv",
+                        "personAbout_role_mv",
+                        "personAbout_comment_mv",
+                        "personAt_display_mv",
+                        "personAt_id_mv",
+                        "personBy_display_mv",
+                        "personBy_id_mv",
+                        "personBy_role_mv",
+                        "personTo_id_mv",
+                        "personTo_display_mv",
+                        "place_mv",
+                        "publisherOriginalLocation_mv",
+                        "publisherOriginal_text_mv",
+                        "relation_id_mv",
+                        "relation_display_mv",
+                        "seeAlso_display_mv",
+                        "seeAlso_id_mv",
+                        "reference_text_mv",
+                        "reference_type_mv",
+                        "schemaVersion",
+                        "subject_display_mv",
+                        "subject_id_mv",
+                        "title",
+                        "titleShort",
+                        "titleSuffix",
+                        "titleOther_type_mv",
+                        "titleResponsability",
+                        "url",
+                        "website_url_mv",
+                        "website_description_mv",
+                        "work_id_mv",
+                        "work_display_mv"
+                    ]
+                },
+                "examples": {
+                    "default": {
+                        "summary": "Liefere die bestandsübergreifenden Standardfelder. (Standard)"
+                    },
+                    "simple": {
+                        "summary": "Liefere nur die ID und Angaben zu Titel, Urheber:innen, Datum und Orten.",
+                        "value": ["id", "title", "titleSuffix", "personBy_display_mv", "dateOrigin", "place_mv"]
+                    }
+                }
+            },
+            "query": {
+                "name": "q",
+                "in": "query",
+                "description": "Die Suchanfrage.\n\nMehrere Suchbegriffe können mit **AND** und **OR** verknüpft werden. Phrasen müssen in Anführungszeichen eingeschlossen werden.",
+                "required": true,
+                "style": "form",
+                "schema": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "examples": {
+                    "simple": {
+                        "description": "",
+                        "value": ""
+                    },
+                    "complex": {
+                        "description": "",
+                        "value": ""
+                    }
+                }
+            },
+            "from": {
+                "name": "from",
+                "in": "query",
+                "description": "Erster Datensatz der Ergebnisliste, der zurückgegeben werden soll.",
+                "required": false,
+                "style": "form",
+                "schema": {
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "default": 1
+                }
+            },
+            "size": {
+                "name": "size",
+                "in": "query",
+                "description": "Anzahl der Datensätze, die zurückgegeben werden sollen.",
+                "required": false,
+                "style": "form",
+                "schema": {
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 500,
+                    "default": 50
+                }
+            },
+            "sort": {
+                "name": "sort",
+                "in": "query",
+                "description": "Liste der Sortierkriterien mit Suffix `[asc|desc]`\n\n- **asc** sortiert aufsteigend\n- **desc** sortiert absteigend",
+                "required": false,
+                "style": "form",
+                "explode": false,
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z]+\\s(?:asc|desc)$"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "default": ["score desc"]
+                },
+                "examples": {
+                    "default": {
+                        "summary": "Sortiere die Ergebnisse absteigend nach Revelanz. (Standard)"
+                    },
+                    "simple": {
+                        "summary": "Sortiere die Ergebnisse aufsteigend nach Datum, dann absteigend nach Relevanz.",
+                        "value": ["dateOrigin asc", "score desc"]
+                    }
+                }
+            }
+        }
+    },
+    "security": [
+        {}
+    ],
+    "externalDocs": {
+        "description": "Weitere Informationen zu den Datenschnittstellen des Deutschen Literaturarchivs Marbach",
+        "url": "https://dataservice.dla-marbach.de"
+    }
+}
