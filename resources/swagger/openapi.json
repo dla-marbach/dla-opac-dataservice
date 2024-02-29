@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "DLA Data+ API",
-        "description": "Daten des Quellenrepertoriums der Exilbibliotheken von Alfred Döblin und Siegfried Kracauer",
+        "description": "Entwickelt an den Daten des Quellenrepertoriums der Exilbibliotheken von Alfred Döblin und Siegfried Kracauer",
         "termsOfService": "https://www.dla-marbach.de/service/benutzung-bibliothek/",
         "contact": {
             "name": "Deutsches Literaturarchiv Marbach",
@@ -38,7 +38,7 @@
         },
         "/info/schema": {
             "get": {
-                "description": "Liefert Informationen über alle selektierbaren Felder im Suchindex und ihre Datentypen.",
+                "description": "Liefert Informationen über alle selektierbaren Felder und ihre Datentypen.\n\nWeitere Informationen zum Datenmodell und den Feldbezeichnungen finden sich auf [GitHub](https://github.com/dla-marbach/dla-opac-transform/blob/main/docs/README.md).",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -172,12 +172,12 @@
                 "schema": {
                     "type": "string"
                 },
-                "example": "AK12345678"
+                "example": "AK01041592"
             },
             "collectionId": {
                 "name": "id",
                 "in": "path",
-                "description": "Eindeutige ID eines Sammlungsdatensatzes.\n\nEine Liste aller verfügbaren Sammlungen liefert der Endpunkt [/collections](/collections).",
+                "description": "Eindeutige ID eines Sammlungsdatensatzes.\n\nEine Liste aller verfügbaren Sammlungen liefert der Endpunkt [/collections](#/default/get_collections).",
                 "required": true,
                 "style": "simple",
                 "schema": {
@@ -223,7 +223,7 @@
             "fields": {
                 "name": "fields",
                 "in": "query",
-                "description": "Liste der Felder, die je Datensatz ausgegeben werden sollen.\n\nEine Liste der unterstützten Felder liefert der Endpunkt [/info/schema](/info/schema).\n\n*Eine Feldauswahl ist nur für die Ausgabeformate* `json` *und* `jsonl` *möglich!*",
+                "description": "Liste der Felder, die je Datensatz ausgegeben werden sollen.\n\nEine Liste der unterstützten Felder liefert der Endpunkt [/info/schema](#/default/get_info_schema).\n\n*Eine Feldauswahl ist nur für die Ausgabeformate* `json` *und* `jsonl` *möglich!*",
                 "required": false,
                 "style": "form",
                 "explode": false,
@@ -269,7 +269,6 @@
                             "classificationSubject_display_mv",
                             "classificationSubject_id_mv",
                             "classificationSubjectOther_mv",
-                            "confidential",
                             "content",
                             "corporationAbout_comment_mv",
                             "corporationAbout_display_mv",
@@ -332,7 +331,6 @@
                             "extentFormat",
                             "extentIllustrations_mv",
                             "extentSupplements",
-                            "Feldbezeichnung",
                             "filePath",
                             "filterCollection_mv",
                             "gender",
@@ -467,7 +465,6 @@
                             "relation_display_mv",
                             "relation_id_mv",
                             "relation_type_mv",
-                            "schemaVersion",
                             "scholarlyPublication_date_mv",
                             "scholarlyPublication_location_mv",
                             "scholarlyPublication_text_mv",
@@ -616,11 +613,94 @@
                 },
                 "examples": {
                     "default": {
-                        "summary": "Liefere die bestandsübergreifenden Standardfelder. (Standard)"
+                        "summary": "Liefere die bestandsübergreifenden Standardfelder. (Standard)",
+                        "value": [
+                            "accession_id",
+                            "accessionNumber",
+                            "accession_display",
+                            "category",
+                            "categorySub",
+                            "categoryMedium_mv",
+                            "categoryPublication_mv",
+                            "child_id_mv",
+                            "child_display_mv",
+                            "corporation_id_mv",
+                            "corporationAbout_display_mv",
+                            "corporationAbout_id_mv",
+                            "corporationAt_display_mv",
+                            "corporationAt_id_mv",
+                            "corporationBy_display_mv",
+                            "corporationBy_id_mv",
+                            "corporationTo_id_mv",
+                            "country_mv",
+                            "dateCataloged",
+                            "dateOrigin",
+                            "display",
+                            "digitalObject_id_mv",
+                            "digitalObject_display_mv",
+                            "exportRIS",
+                            "extent",
+                            "genreOther_mv",
+                            "item_id_mv",
+                            "item_display_mv",
+                            "language_mv",
+                            "languageOriginal_mv",
+                            "gnd_id_mv",
+                            "gndRelation_id_mv",
+                            "gndRelation_text_mv",
+                            "gndRelation_type_mv",
+                            "gndRelation_comment_mv",
+                            "id",
+                            "mediaNumber",
+                            "note",
+                            "noteOther_mv",
+                            "parent_display_mv",
+                            "parent_id_mv",
+                            "personAbout_id_mv",
+                            "personAbout_display_mv",
+                            "personAbout_role_mv",
+                            "personAbout_comment_mv",
+                            "personAt_display_mv",
+                            "personAt_id_mv",
+                            "personBy_display_mv",
+                            "personBy_id_mv",
+                            "personBy_role_mv",
+                            "personTo_id_mv",
+                            "personTo_display_mv",
+                            "place_mv",
+                            "publisherOriginalLocation_mv",
+                            "publisherOriginal_text_mv",
+                            "relation_id_mv",
+                            "relation_display_mv",
+                            "seeAlso_display_mv",
+                            "seeAlso_id_mv",
+                            "reference_text_mv",
+                            "reference_type_mv",
+                            "schemaVersion",
+                            "subject_display_mv",
+                            "subject_id_mv",
+                            "title",
+                            "titleShort",
+                            "titleSuffix",
+                            "titleOther_type_mv",
+                            "titleResponsability",
+                            "url",
+                            "website_url_mv",
+                            "website_description_mv",
+                            "work_id_mv",
+                            "work_display_mv"    
+                        ]
                     },
                     "simple": {
                         "summary": "Liefere nur die ID und Angaben zu Titel, Urheber:innen, Datum und Orten.",
-                        "value": ["id", "title", "titleSuffix", "personBy_display_mv", "dateOrigin", "place_mv"]
+                        "value": [
+                            "id",
+                            "title",
+                            "titleSuffix",
+                            "personBy_display_mv",
+                            "dateOrigin",
+                            "place_mv"
+                        ]
                     }
                 }
             },
@@ -632,16 +712,17 @@
                 "style": "form",
                 "schema": {
                     "type": "string",
-                    "minLength": 1
+                    "minLength": 1,
+                    "default": "*"
                 },
                 "examples": {
                     "simple": {
-                        "description": "",
-                        "value": ""
+                        "description": "Liefere alle Datensätze aus. (Standard)",
+                        "value": "*"
                     },
                     "complex": {
-                        "description": "",
-                        "value": ""
+                        "description": "Liefere alle Datensätze zu Dokumenten in lateinischer Sprache.",
+                        "value": "language_mv:Latein"
                     }
                 }
             },
@@ -691,7 +772,8 @@
                 },
                 "examples": {
                     "default": {
-                        "summary": "Sortiere die Ergebnisse absteigend nach Revelanz. (Standard)"
+                        "summary": "Sortiere die Ergebnisse absteigend nach Revelanz. (Standard)",
+                        "value": ["score desc"]
                     },
                     "simple": {
                         "summary": "Sortiere die Ergebnisse aufsteigend nach Datum, dann absteigend nach Relevanz.",
