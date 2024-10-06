@@ -558,7 +558,6 @@
                         "display",
                         "digitalObject_id_mv",
                         "digitalObject_display_mv",
-                        "exportRIS",
                         "extent",
                         "genreOther_mv",
                         "item_id_mv",
@@ -638,7 +637,6 @@
                             "display",
                             "digitalObject_id_mv",
                             "digitalObject_display_mv",
-                            "exportRIS",
                             "extent",
                             "genreOther_mv",
                             "item_id_mv",
@@ -688,7 +686,7 @@
                             "website_url_mv",
                             "website_description_mv",
                             "work_id_mv",
-                            "work_display_mv"    
+                            "work_display_mv"
                         ]
                     },
                     "simple": {
