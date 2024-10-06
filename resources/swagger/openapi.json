@@ -27,7 +27,7 @@
     "paths": {
         "/info": {
             "get": {
-                "description": "Diese offene Schnittstelle enthält die bibliographischen Daten des Quellenrepertoriums der Exilbibliotheken von [Alfred Döblin](https://www.dla-marbach.de/bibliothek/projekte/quellenrepertorium-alfred-doeblin) und [Siegfried Kracauer](https://www.dla-marbach.de/bibliothek/spezialsammlungen/bestandsliste/bibliothek-siegfried-kracauer/).\n\nSie wurde im Rahmen des Projekts \"Data+\" mit Unterstützung des NFDI-Konsortiums [Text+](https://text-plus.org/) und Förderung der Deutschen Forschungsgemeinschaft entwickelt.\n\n*Bitte beachten Sie auch die [Nutzungsbedingungen](https://www.dla-marbach.de/katalog/dla-dataplus/nutzungsbedingungen/).*",
+                "description": "Diese offene Schnittstelle enthält die bibliographischen Daten des Quellenrepertoriums der Exilbibliotheken von [Alfred Döblin](https://www.dla-marbach.de/bibliothek/projekte/quellenrepertorium-alfred-doeblin) und [Siegfried Kracauer](https://www.dla-marbach.de/bibliothek/spezialsammlungen/bestandsliste/bibliothek-siegfried-kracauer/).\n\nSie wurde im Rahmen des Projekts \"Data+\" mit Unterstützung des NFDI-Konsortiums [Text+](https://text-plus.org/) und Förderung der Deutschen Forschungsgemeinschaft entwickelt. Weitere Informationen finden Sie auf der [Webseite des Deutschen Literaturarchivs](https://www.dla-marbach.de/katalog/dla-dataplus/).\n\n*Bitte beachten Sie auch die [Nutzungsbedingungen](https://www.dla-marbach.de/katalog/dla-dataplus/nutzungsbedingungen/).*",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -786,6 +786,6 @@
     ],
     "externalDocs": {
         "description": "Weitere Informationen zu den Datenschnittstellen des Deutschen Literaturarchivs Marbach",
-        "url": "https://dataservice.dla-marbach.de"
+        "url": "https://www.dla-marbach.de/katalog/dla-dataplus/"
     }
 }
