@@ -3,7 +3,7 @@
     "info": {
         "title": "DLA Data+ API",
         "description": "Entwickelt an den Daten des Quellenrepertoriums der Exilbibliotheken von Alfred Döblin und Siegfried Kracauer",
-        "termsOfService": "https://www.dla-marbach.de/service/benutzung-bibliothek/",
+        "termsOfService": "https://www.dla-marbach.de/katalog/dla-dataplus/nutzungsbedingungen/",
         "contact": {
             "name": "Deutsches Literaturarchiv Marbach",
             "url": "https://www.dla-marbach.de/kontakt/"
@@ -27,7 +27,7 @@
     "paths": {
         "/info": {
             "get": {
-                "description": "Diese offene Schnittstelle enthält die bibliographischen Daten des Quellenrepertoriums der Exilbibliotheken von [Alfred Döblin](https://www.dla-marbach.de/bibliothek/projekte/quellenrepertorium-alfred-doeblin) und [Siegfried Kracauer](https://www.dla-marbach.de/bibliothek/spezialsammlungen/bestandsliste/bibliothek-siegfried-kracauer/).\n\nSie wurde im Rahmen des Projekts \"Data+\" mit Unterstützung des NFDI-Konsortiums [Text+](https://text-plus.org/) und Förderung der Deutschen Forschungsgemeinschaft entwickelt.\n\n*Bitte beachten Sie auch die [Benutzungsordnung](https://www.dla-marbach.de/service/benutzung-bibliothek/).*",
+                "description": "Diese offene Schnittstelle enthält die bibliographischen Daten des Quellenrepertoriums der Exilbibliotheken von [Alfred Döblin](https://www.dla-marbach.de/bibliothek/projekte/quellenrepertorium-alfred-doeblin) und [Siegfried Kracauer](https://www.dla-marbach.de/bibliothek/spezialsammlungen/bestandsliste/bibliothek-siegfried-kracauer/).\n\nSie wurde im Rahmen des Projekts \"Data+\" mit Unterstützung des NFDI-Konsortiums [Text+](https://text-plus.org/) und Förderung der Deutschen Forschungsgemeinschaft entwickelt. Weitere Informationen finden Sie auf der [Webseite des Deutschen Literaturarchivs](https://www.dla-marbach.de/katalog/dla-dataplus/).\n\n*Bitte beachten Sie auch die [Nutzungsbedingungen](https://www.dla-marbach.de/katalog/dla-dataplus/nutzungsbedingungen/).*",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -558,7 +558,6 @@
                         "display",
                         "digitalObject_id_mv",
                         "digitalObject_display_mv",
-                        "exportRIS",
                         "extent",
                         "genreOther_mv",
                         "item_id_mv",
@@ -638,7 +637,6 @@
                             "display",
                             "digitalObject_id_mv",
                             "digitalObject_display_mv",
-                            "exportRIS",
                             "extent",
                             "genreOther_mv",
                             "item_id_mv",
@@ -688,7 +686,7 @@
                             "website_url_mv",
                             "website_description_mv",
                             "work_id_mv",
-                            "work_display_mv"    
+                            "work_display_mv"
                         ]
                     },
                     "simple": {
@@ -707,7 +705,7 @@
             "query": {
                 "name": "q",
                 "in": "query",
-                "description": "Die Suchanfrage.\n\nMehrere Suchbegriffe können mit **AND** und **OR** verknüpft werden. Phrasen müssen in Anführungszeichen eingeschlossen werden.",
+                "description": "Die Suchanfrage.\n\nMehrere Suchbegriffe können mit **AND** und **OR** verknüpft werden, mit **NOT** können Bedingungen negiert werden. Phrasen müssen in Anführungszeichen eingeschlossen werden. Eine gezielte Suche in spezifischen Feldern ist mit einem Doppelpunkt (**:**) zwischen Feldname und Suchbegriff möglich. Ein Sternchen (**\\***) kann als Platzhalter verwendet werden.\n\n*Die Datenschnittstelle unterstützt die [Such-Syntax des Standard Query Parser von Apache Solr](https://solr.apache.org/guide/solr/latest/query-guide/standard-query-parser.html#specifying-terms-for-the-standard-query-parser).*",
                 "required": true,
                 "style": "form",
                 "schema": {
@@ -788,6 +786,6 @@
     ],
     "externalDocs": {
         "description": "Weitere Informationen zu den Datenschnittstellen des Deutschen Literaturarchivs Marbach",
-        "url": "https://dataservice.dla-marbach.de"
+        "url": "https://www.dla-marbach.de/katalog/dla-dataplus/"
     }
 }
