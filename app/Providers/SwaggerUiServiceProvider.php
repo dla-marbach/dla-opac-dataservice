@@ -9,10 +9,7 @@ class SwaggerUiServiceProvider extends ServiceProvider
 {
     public function boot() : void
     {
-//        Gate::define('viewSwaggerUI', function ($user = null) {
-//            return in_array(optional($user)->email, [
-//                //
-//            ]);
-//        });
+        // override method in OpenApiJsonController to load field names dynamically
+        $this->app->bind('NextApps\SwaggerUi\Http\Controllers\OpenApiJsonController', 'App\Http\Controllers\OverrideOpenApiJsonController');
     }
 }
