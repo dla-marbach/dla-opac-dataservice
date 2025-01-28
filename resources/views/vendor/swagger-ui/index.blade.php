@@ -4,9 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ config('app.name') }} - {{ __('Swagger') }}</title>
+        <title>DLA Data+ API</title>
 
-        <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@latest/swagger-ui.css">
+        <!--<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@latest/swagger-ui.css">-->
+        <link rel="stylesheet" href="/css/swagger-ui.css">
 
         <style>
             html {
@@ -26,7 +27,7 @@
     <body>
         <div id="swagger-ui"></div>
 
-        <script src="https://unpkg.com/swagger-ui-dist@latest/swagger-ui-bundle.js"></script>
+        <script src="/js/swagger-ui-bundle.js"></script>
 
         <script>
             window.onload = function () {
