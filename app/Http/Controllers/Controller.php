@@ -62,22 +62,27 @@ class Controller extends BaseController
         $docCount = 0;
         $lastModify = 0;
         if ($jsonResponse->status->{$core}) {
-            $coreInfo = $jsonResponse->status->{config('dla_solr.core')};
+            $coreInfo = $jsonResponse->status->{$core};
             $docCount = $coreInfo->index->numDocs;
             $lastModify = $coreInfo->index->lastModified;
         }
 
-        return json_encode([
+        return response(
+            json_encode([
            'description' => 'Beschreibung der Schnittstelle',
            'documentCount' => $docCount,
            'collectionCount' => count($config),
            'lastModify' => $lastModify,
            'license' => 'CC-BY 4.0'
-        ], JSON_UNESCAPED_UNICODE);
+        ], JSON_UNESCAPED_UNICODE)
+        )
+            ->header('content-type', 'application/json; charset=utf-8')
+            ->header('Access-Control-Allow-Origin', '*');
     }
 
     public function getInfoSchema()
     {
+        // count documents
         $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/' . 'schema/']);
         $solrQueryParams['query']['wt'] = 'json';
 
@@ -94,68 +99,77 @@ class Controller extends BaseController
             }
         }
 
-        return json_encode($output, JSON_UNESCAPED_UNICODE);
+        return response(
+            json_encode($output, JSON_UNESCAPED_UNICODE)
+        )->header('content-type', 'application/json; charset=utf-8')
+            ->header('Access-Control-Allow-Origin', '*');
     }
 
-    public function responseFilter($responseBody, $format)
+    public function responseFilter($response, $format, $contentType)
     {
-        $j = 0;
-        $dataRemaining = '';
-        while(true) {
-            $data = $responseBody->read(8192);
+        return response()->stream(function() use($response, $format) {
+            $responseBody = $response->getBody();
 
-            // add remaining data if exists
-            if ($dataRemaining) {
-                $data = $dataRemaining . $data;
-                $dataRemaining = '';
-            }
+            $j = 0;
+            $dataRemaining = '';
+            while(true) {
+                $data = $responseBody->read(8192);
 
-            // first check the last new line char in this chunk
-            $lastNewLinePosition = strrpos($data, PHP_EOL);
+                // add remaining data if exists
+                if ($dataRemaining) {
+                    $data = $dataRemaining . $data;
+                    $dataRemaining = '';
+                }
 
-            $dataRemaining = substr($data, $lastNewLinePosition);
-            $data = substr($data, 0, $lastNewLinePosition);
+                // first check the last new line char in this chunk
+                $lastNewLinePosition = strrpos($data, PHP_EOL);
 
-            if ($j === 0) {
-                // check if format has no documents
-                if ($format === 'csv') {
-                    if ((strlen($data) + strlen($dataRemaining)) < 6000) {
-                        // Throw not found exception if solr returns 0 documents
-                        throw new NotFoundHttpException();
-                    }
-                } else {
-                    $documentCounter = 0;
-                    // extract solr general info from stream
-                    preg_match("/\"numFound\":(\d*)/", $data, $generalData);
-                    if (isset($generalData[1])) {
-                        $documentCounter = intval($generalData[1]);
-                    }
-                    if ($documentCounter === 0) {
-                        // Throw not found exception if solr returns 0 documents
-                        throw new NotFoundHttpException();
+                $dataRemaining = substr($data, $lastNewLinePosition);
+                $data = substr($data, 0, $lastNewLinePosition);
+
+                if ($j === 0) {
+                    // check if format has no documents
+                    if ($format === 'csv') {
+                        if ((strlen($data) + strlen($dataRemaining)) < 6000) {
+                            // Throw not found exception if solr returns 0 documents
+                            throw new NotFoundHttpException();
+                        }
+                    } else {
+                        $documentCounter = 0;
+                        // extract solr general info from stream
+                        preg_match("/\"numFound\":(\d*)/", $data, $generalData);
+                        if (isset($generalData[1])) {
+                            $documentCounter = intval($generalData[1]);
+                        }
+                        if ($documentCounter === 0) {
+                            // Throw not found exception if solr returns 0 documents
+                            throw new NotFoundHttpException();
+                        }
                     }
                 }
-            }
 
-            if ($format === 'ris') {
-                $data = $this->sanitizeRis($data, $responseBody, $j);
-            } else if ($format === 'mods') {
-                $data = $this->sanitizeMods($data, $responseBody, $j);
-            } else if ($format === 'dc') {
-                $data = $this->sanitizeDublinCore($data, $responseBody, $j);
-            } else if ($format === 'json') {
-                $data = $this->sanitizeJson($data, $responseBody, $j);
-            } else if ($format === 'jsonl') {
-                $data = $this->sanitizeJson($data, $responseBody, $j, true);
-            }
+                if ($format === 'ris') {
+                    $data = $this->sanitizeRis($data, $responseBody, $j);
+                } else if ($format === 'mods') {
+                    $data = $this->sanitizeMods($data, $responseBody, $j);
+                } else if ($format === 'dc') {
+                    $data = $this->sanitizeDublinCore($data, $responseBody, $j);
+                } else if ($format === 'json') {
+                    $data = $this->sanitizeJson($data, $responseBody, $j);
+                } else if ($format === 'jsonl') {
+                    $data = $this->sanitizeJson($data, $responseBody, $j, true);
+                }
 
-            if ($responseBody->eof()) {
+                if ($responseBody->eof()) {
+                    echo $data;
+                    break;
+                }
                 echo $data;
-                break;
+                $j = 1;
             }
-            echo $data;
-            $j = 1;
-        }
+
+            return $response;
+        },200, ['content-type' => $contentType, 'Access-Control-Allow-Origin' => '*']);
     }
 
     private function sanitizeJson(String $data, $responseBody, int $count, $linesOutput = false) {
@@ -169,8 +183,6 @@ class Controller extends BaseController
 
         if ($linesOutput) {
             $data = str_replace("\n", '', $data);
-//        $data = str_replace(',        ', ',', $data);
-//        $data = str_replace(',      ', ',', $data);
             $data = str_replace('{        ', '{', $data);
             $data = str_replace('},', '}' . PHP_EOL, $data);
         }
@@ -272,6 +284,7 @@ class Controller extends BaseController
 
     public function formattingResponse($solrQueryParams, $format, $client)
     {
+        $contentType = 'application/json; charset=utf-8';
         if ($format === 'csv' || $format === '.csv') {
             $format = 'csv';
             $solrQueryParams['query']['wt'] = 'csv';
@@ -280,38 +293,39 @@ class Controller extends BaseController
             $format = 'json';
             $solrQueryParams['query']['wt'] = 'json';
             $filename = 'export.json';
+            $contentType = 'application/json; charset=utf-8';
         } else if ($format === 'ris' || $format === '.ris') {
             $format = 'ris';
             $solrQueryParams['query']['fl'] = 'exportRIS';
             $filename = 'export.ris';
+            $contentType = 'text/plain; charset=utf-8';
         } else if ($format === 'mods' || $format === '.mods') {
             $format = 'mods';
             $solrQueryParams['query']['fl'] = 'exportMODS';
             $filename = 'export.xml';
+            $contentType = 'text/xml; charset=utf-8';
         } else if ($format === 'dc' || $format === '.dc') {
             $format = 'dc';
             $solrQueryParams['query']['fl'] = 'exportDC';
             $filename = 'export.xml';
+            $contentType = 'text/xml; charset=utf-8';
         } else if ($format === 'jsonl' || $format === '.jsonl') {
             $format = 'jsonl';
             $solrQueryParams['query']['wt'] = 'json';
             $filename = 'export.json';
+            $contentType = 'application/json; charset=utf-8';
         } else {
             // default = json
             $solrQueryParams['query']['wt'] = 'json';
             $filename = 'export.json';
+            $contentType = 'application/json; charset=utf-8';
         }
 
         $solrQueryParams['stream'] = true;
 
         $response = $client->request('GET', 'select', $solrQueryParams);
-        $responseBody = $response->getBody();
 
-        header('Access-Control-Allow-Origin: *');
-
-//        header('Content-Disposition: attachment; filename="'.$filename.'";');
-
-        $this->responseFilter($responseBody, $format);
+        return $this->responseFilter($response, $format, $contentType);
     }
 
     public function getRecord(Request $request, $id, $format = 'json')
@@ -348,7 +362,10 @@ class Controller extends BaseController
         $responseBody = $response->getBody();
         $jsonResponse = json_decode($responseBody->getContents());
 
-        return json_encode(['documentCount' => $jsonResponse->response->numFound], JSON_UNESCAPED_UNICODE);
+        return response(
+            json_encode(['documentCount' => $jsonResponse->response->numFound], JSON_UNESCAPED_UNICODE)
+        )->header('content-type', 'application/json; charset=utf-8')
+            ->header('Access-Control-Allow-Origin', '*');
     }
 
     public function getRecords(Request $request)
@@ -427,7 +444,10 @@ class Controller extends BaseController
             $output[] = ['id' => $collectionName, 'name' => $collection['info'], 'url' => $collection['url']];
         }
 
-        return json_encode($output,JSON_UNESCAPED_UNICODE);
+        return response(
+            json_encode($output, JSON_UNESCAPED_UNICODE)
+        )->header('content-type', 'application/json; charset=utf-8')
+            ->header('Access-Control-Allow-Origin', '*');
     }
 
 }
