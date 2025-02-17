@@ -223,7 +223,7 @@
             "fields": {
                 "name": "fields",
                 "in": "query",
-                "description": "Liste der Felder, die je Datensatz ausgegeben werden sollen.\n\nEine Liste der unterstützten Felder liefert der Endpunkt [/info/schema](#/default/get_info_schema).\n\n*Eine Feldauswahl ist nur für die Ausgabeformate* `json` *und* `jsonl` *möglich!*",
+                "description": "Liste der Felder, die je Datensatz ausgegeben werden sollen.\n\nEine Liste der unterstützten Felder liefert der Endpunkt [/info/schema](#/default/get_info_schema). Das Platzhalter-Zeichen `*` kann in Feldnamen verwendet werden (beispielsweise würde `person*` alle Felder mit personenbezogenen Angaben liefern).\n\n*Eine Feldauswahl ist nur für die Ausgabeformate* `json` *und* `jsonl` *möglich!*",
                 "required": false,
                 "style": "form",
                 "explode": false,
