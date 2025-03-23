@@ -32,7 +32,7 @@
 <script>
     window.onload = function () {
         window.ui = SwaggerUIBundle({
-            url: '{{ route('swagger-openapi-json', [], false) }}',
+            url: '{{ asset('swagger/openapi.json') }}',
             dom_id: '#swagger-ui',
             deepLinking: true,
             presets: [
