@@ -15,8 +15,8 @@ return [
     |
     */
 
-    'base_uri' => env('DLA_SOLR_BASE_URI', 'http://datastream.dla-marbach.de:8983/solr/'),
-    'core' => env('DLA_SOLR_BASE_CORE', 'internformat'),
+    'base_uri' => env('DLA_SOLR_BASE_URI', ''),
+    'core' => env('DLA_SOLR_BASE_CORE', ''),
     'staticFilter' => '*'
 
 ];
