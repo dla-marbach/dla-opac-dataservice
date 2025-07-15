@@ -224,7 +224,9 @@ class Controller extends BaseController
         // remove mods node because of namespace declaration
         $data = preg_replace("/<mods[^>C]*>/", '<mods>', $data);
 
-        $data = preg_replace('/"\s*},{|"\s*}]\s*}/','', $data);
+        $data = preg_replace('/"\s*},{|"\s*}]\s*}|}]\s*}/','', $data);
+
+        $data = preg_replace('/},[{\s},]*{/', '', $data);
 
         if ($responseBody->eof()) {
             // remove end of json brackets if only one document is given
@@ -260,7 +262,9 @@ class Controller extends BaseController
         // remove mods node because of namespace declaration
         $data = preg_replace("/<oai_dc:dc[^>C]*>/", '<oai_dc:dc>', $data);
 
-        $data = preg_replace('/"\s*},{|"\s*}]\s*}/','', $data);
+        $data = preg_replace('/"\s*},{|"\s*}]\s*}|}]\s*}/','', $data);
+
+        $data = preg_replace('/},[{\s},]*{/', '', $data);
 
         if ($responseBody->eof()) {
             // remove end of json brackets if only one document is given
@@ -282,7 +286,9 @@ class Controller extends BaseController
         $data = str_replace('\n', PHP_EOL, $data);
         $data = str_replace('\"', '"', $data);
 
-        $data = preg_replace('/"\s*},{|"\s*}]\s*}/','', $data);
+        $data = preg_replace('/"\s*},{|"\s*}]\s*}|}]\s*}/','', $data);
+
+        $data = preg_replace('/},[{\s},]*{/', '', $data);
 
 //        if ($responseBody->eof()) {
 //            $data = substr($data, 0, -9);
