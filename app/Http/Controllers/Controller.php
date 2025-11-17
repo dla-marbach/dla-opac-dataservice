@@ -76,7 +76,7 @@ class Controller extends BaseController
            'documentCount' => $docCount,
            'collectionCount' => count($config),
            'lastModify' => $lastModify,
-           'license' => 'CC-BY 4.0'
+           'license' => 'CC0 (Public Domain)'
         ], JSON_UNESCAPED_UNICODE)
         )
             ->header('content-type', 'application/json; charset=utf-8')
@@ -108,7 +108,7 @@ class Controller extends BaseController
             ->header('Access-Control-Allow-Origin', '*');
     }
 
-    public function responseFilter($response, $format, $contentType)
+    public function responseFilter($response, $format, $contentType, $filename = '')
     {
         return response()->stream(function() use($response, $format) {
             $responseBody = $response->getBody();
@@ -172,7 +172,10 @@ class Controller extends BaseController
             }
 
             return $response;
-        },200, ['content-type' => $contentType, 'Access-Control-Allow-Origin' => '*']);
+        },200,
+            ['content-type' => $contentType,
+                'Access-Control-Allow-Origin' => '*',
+            ]);
     }
 
     private function sanitizeJson(String $data, $responseBody, int $count, $linesOutput = false) {
@@ -340,7 +343,7 @@ class Controller extends BaseController
 
         $response = $client->request('GET', 'select', $solrQueryParams);
 
-        return $this->responseFilter($response, $format, $contentType);
+        return $this->responseFilter($response, $format, $contentType, $filename);
     }
 
     public function getRecord(Request $request, $id, $format = 'json')
