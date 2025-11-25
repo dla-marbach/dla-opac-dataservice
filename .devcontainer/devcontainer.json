@@ -1,0 +1,12 @@
+{
+  "forwardPorts": [8000, 8983],
+  "portsAttributes": {
+    "8000": { "label": "Laravel" },
+    "8983": { "label": "Solr" }
+  },
+  "postCreateCommand": "composer install && cp .env.example .env && php artisan key:generate && bash solr-install.sh",
+  "postAttachCommand": {
+    "solr": "bash solr-start.sh",
+    "laravel": "php artisan serve"
+  }
+}
