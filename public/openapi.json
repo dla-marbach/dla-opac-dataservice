@@ -2,11 +2,11 @@
     "openapi": "3.0.3",
     "info": {
         "title": "DLA Data+ API",
-        "description": "Entwickelt an den Daten des Quellenrepertoriums der Exilbibliotheken von Alfred Döblin und Siegfried Kracauer",
+        "description": "Offener Zugang zu den Katalogdaten des DLA Marbach",
         "termsOfService": "https://www.dla-marbach.de/katalog/dla-dataplus/nutzungsbedingungen/",
         "contact": {
             "name": "Deutsches Literaturarchiv Marbach",
-            "url": "https://www.dla-marbach.de/kontakt/"
+            "url": "https://www.dla-marbach.de/katalog/dla-dataplus/"
         },
         "license": {
             "name": "CC0 (Public Domain)",
@@ -31,7 +31,7 @@
     "paths": {
         "/info": {
             "get": {
-                "description": "Diese offene Schnittstelle enthält die bibliographischen Daten des Quellenrepertoriums der Exilbibliotheken von [Alfred Döblin](https://www.dla-marbach.de/bibliothek/projekte/quellenrepertorium-alfred-doeblin) und [Siegfried Kracauer](https://www.dla-marbach.de/bibliothek/spezialsammlungen/bestandsliste/bibliothek-siegfried-kracauer/).\n\nSie wurde im Rahmen des Projekts \"Data+\" mit Unterstützung des NFDI-Konsortiums [Text+](https://text-plus.org/) und Förderung der Deutschen Forschungsgemeinschaft entwickelt. Weitere Informationen finden Sie auf der [Webseite des Deutschen Literaturarchivs](https://www.dla-marbach.de/katalog/dla-dataplus/).\n\n*Bitte beachten Sie auch die [Nutzungsbedingungen](https://www.dla-marbach.de/katalog/dla-dataplus/nutzungsbedingungen/).*",
+                "description": "Diese Schnittstelle bietet einen offenen Zugang (CC0-Lizenz) zu den Katalogdaten des DLA Marbach. \n\nDie Entwicklung erfolgte exemplarisch am Corpus des Quellenrepertoriums der Exilbibliotheken von Alfred Döblin und Siegfried Kracauer. Die offene Schnittstelle wurde im Rahmen des Projekts \"Data+\" mit Unterstützung des NFDI-Konsortiums [Text+](https://text-plus.org/) und Förderung der Deutschen Forschungsgemeinschaft entwickelt. Weitere Informationen finden Sie auf der [Webseite des Deutschen Literaturarchivs](https://www.dla-marbach.de/katalog/dla-dataplus/).\n\n*Bitte beachten Sie auch die [Nutzungsbedingungen](https://www.dla-marbach.de/katalog/dla-dataplus/nutzungsbedingungen/).*",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -789,7 +789,7 @@
         {}
     ],
     "externalDocs": {
-        "description": "Weitere Informationen zu den Datenschnittstellen des Deutschen Literaturarchivs Marbach",
-        "url": "https://www.dla-marbach.de/katalog/dla-dataplus/"
+        "description": "Code und Dokumentation",
+        "url": "https://github.com/dla-marbach/dla-opac-dataservice"
     }
 }
