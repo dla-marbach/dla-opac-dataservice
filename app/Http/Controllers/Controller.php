@@ -316,7 +316,7 @@ class Controller extends BaseController
             $format = 'ris';
             $solrQueryParams['query']['fl'] = 'exportRIS';
             $filename = 'export.ris';
-            $contentType = 'text/plain; charset=utf-8';
+            $contentType = 'text';
         } else if ($format === 'mods' || $format === '.mods') {
             $format = 'mods';
             $solrQueryParams['query']['fl'] = 'exportMODS';
