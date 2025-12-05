@@ -24,8 +24,8 @@
             "url": "https://dataservice-test.dla-marbach.de/v1"
         },
         {
-            "description": "Local",
-            "url": "http://dla-datendienst-laravel-11.ddev.site/v1"
+            "description": "Entwicklungs-System (lokal)",
+            "url": "http://localhost:8000/v1"
         }
     ],
     "paths": {
