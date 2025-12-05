@@ -72,7 +72,7 @@ class Controller extends BaseController
 
         return response(
             json_encode([
-           'description' => 'Beschreibung der Schnittstelle',
+           'description' => 'https://github.com/dla-marbach/dla-opac-dataservice/blob/main/README.md',
            'documentCount' => $docCount,
            'collectionCount' => count($config),
            'lastModify' => $lastModify,
