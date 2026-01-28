@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "DLA Data+ API",
-        "description": "Offener Zugang zu den Katalogdaten des DLA Marbach",
+        "description": "Der Datendienst DLA Data+ bietet einen offenen Zugang (CC0-Lizenz) zu den Katalogdaten des DLA Marbach. Nutzen Sie den Endpunkt [/records](#/Record/get_records) um Daten in verschiedenen Formaten (JSON, DC, MODS, RIS) abzurufen. In der Dokumentation finden Sie [Beispielanfragen](https://github.com/dla-marbach/dla-opac-dataservice#beispielanfragen).",
         "termsOfService": "https://www.dla-marbach.de/katalog/dla-dataplus/nutzungsbedingungen/",
         "contact": {
             "name": "Deutsches Literaturarchiv Marbach",
