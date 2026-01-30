@@ -9,7 +9,7 @@
 - The legacy HTML form in `resources/views/frontend.blade.php` posts to `/v1/query` and `/v1/id`; update those routes if you rename controller methods so manual testers keep a working form.
 ## Documentation & Swagger
 - Swagger UI routes come from `nextapps/laravel-swagger-ui`; `SwaggerUiServiceProvider` binds its controller to `OverrideOpenApiJsonController`, which hits Solr's `/config/requestHandler` endpoint to populate the `fields` enum dynamically before returning the spec.
-- The spec path is configured via `config/swagger-ui.php` (defaults to `resources/swagger/openapi.json`); the repo keeps a public copy at `public/openapi.json` for static hosting, so update both when changing endpoints.
+- The spec path is configured via `config/swagger-ui.php` (defaults to `resources/swagger/openapi.json`)
 - Customized Swagger assets live under `resources/views/vendor/swagger-ui`, `resources/css/swagger-ui.css`, and `resources/js/swagger-ui-bundle.js`; `webpack.mix.js` copies them to `public/`, so run `npm run dev` after editing.
 ## Environment & Configuration
 - Required env vars: `DLA_SOLR_BASE_URI` (with trailing slash), `DLA_SOLR_BASE_CORE`, and `APP_URL` for Swagger server metadata; adjust `DLA_SOLR_STATICFILTER` if production cores include drafts.
