@@ -199,7 +199,8 @@ class Controller extends BaseController
 
         if ($responseBody->eof()) {
             if ($linesOutput) {
-                $data = substr($data, 0,-5);
+                $pos = strrpos($data, ']');
+                $data = ($pos !== false ? substr($data, 0, $pos) : $data) . PHP_EOL;
             } else {
                 $data = substr($data, 0,-4);
             }
