@@ -56,18 +56,22 @@ class Controller extends BaseController
         $config = config('dla_collection');
         $core = config('dla_solr.core');
 
-        // count documents
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . 'admin/']);
-        $response = $client->request('GET', 'cores', ['action' => 'STATUS']);
-        $responseBody = $response->getBody();
-        $jsonResponse = json_decode($responseBody->getContents());
+        // count documents using staticFilter
+        $countClient = new Client(['base_uri' => config('dla_solr.base_uri') . $core . '/select']);
+        $countParams['query']['q'] = config('dla_solr.staticFilter');
+        $countParams['query']['rows'] = 0;
+        $countResponse = $countClient->request('GET', 'select', $countParams);
+        $countJson = json_decode($countResponse->getBody()->getContents());
+        $docCount = $countJson->response->numFound ?? 0;
 
-        $docCount = 0;
+        // get lastModified from admin endpoint
+        $adminClient = new Client(['base_uri' => config('dla_solr.base_uri') . 'admin/']);
+        $adminResponse = $adminClient->request('GET', 'cores', ['action' => 'STATUS']);
+        $adminJson = json_decode($adminResponse->getBody()->getContents());
+
         $lastModify = 0;
-        if ($jsonResponse->status->{$core}) {
-            $coreInfo = $jsonResponse->status->{$core};
-            $docCount = $coreInfo->index->numDocs;
-            $lastModify = $coreInfo->index->lastModified;
+        if ($adminJson->status->{$core}) {
+            $lastModify = $adminJson->status->{$core}->index->lastModified;
         }
 
         return response(
