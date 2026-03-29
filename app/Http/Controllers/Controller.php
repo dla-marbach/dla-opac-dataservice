@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Facade\FlareClient\Http\Exceptions\NotFound;
 use GuzzleHttp\Client as Client;
+use JsonMachine\Items;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -115,195 +116,91 @@ class Controller extends BaseController
     public function responseFilter($response, $format, $contentType, $filename = '')
     {
         return response()->stream(function() use($response, $format) {
-            $responseBody = $response->getBody();
+            $body = $response->getBody();
 
-            $j = 0;
-            $dataRemaining = '';
-            while(true) {
-                $data = $responseBody->read(8192);
-
-                // add remaining data if exists
-                if ($dataRemaining) {
-                    $data = $dataRemaining . $data;
-                    $dataRemaining = '';
-                }
-
-                // first check the last new line char in this chunk
-                $lastNewLinePosition = strrpos($data, PHP_EOL);
-
-                $dataRemaining = substr($data, $lastNewLinePosition);
-                $data = substr($data, 0, $lastNewLinePosition);
-
-                if ($j === 0) {
-                    // check if format has no documents
-                    if ($format === 'csv' || $format === 'tsv') {
-                        $lineCount = substr_count($data . $dataRemaining, PHP_EOL);
-                        if ($lineCount <= 1) {
-                            // Throw not found exception if solr returns 0 documents
+            // CSV and TSV are native Solr formats — stream directly without JSON parsing
+            if ($format === 'csv' || $format === 'tsv') {
+                $firstChunk = true;
+                while (!$body->eof()) {
+                    $chunk = $body->read(8192);
+                    if ($firstChunk) {
+                        if (substr_count($chunk, PHP_EOL) <= 1) {
                             throw new NotFoundHttpException();
                         }
-                    } else {
-                        $documentCounter = 0;
-                        // extract solr general info from stream
-                        preg_match("/\"numFound\":(\d*)/", $data, $generalData);
-                        if (isset($generalData[1])) {
-                            $documentCounter = intval($generalData[1]);
-                        }
-                        if ($documentCounter === 0) {
-                            // Throw not found exception if solr returns 0 documents
-                            throw new NotFoundHttpException();
-                        }
+                        $firstChunk = false;
                     }
+                    echo $chunk;
                 }
-
-                if ($format === 'ris') {
-                    $data = $this->sanitizeRis($data, $responseBody, $j);
-                } else if ($format === 'mods') {
-                    $data = $this->sanitizeMods($data, $responseBody, $j);
-                } else if ($format === 'dc') {
-                    $data = $this->sanitizeDublinCore($data, $responseBody, $j);
-                } else if ($format === 'json') {
-                    $data = $this->sanitizeJson($data, $responseBody, $j);
-                } else if ($format === 'jsonl') {
-                    $data = $this->sanitizeJson($data, $responseBody, $j, true);
-                }
-
-                if ($responseBody->eof()) {
-                    echo $data;
-                    break;
-                }
-                echo $data;
-                $j = 1;
+                return;
             }
 
-            return $response;
-        },200,
-            ['content-type' => $contentType,
-                'Access-Control-Allow-Origin' => '*',
+            // All other formats: use json-machine for robust streaming JSON parsing
+            $chunks = (function() use ($body) {
+                while (!$body->eof()) {
+                    yield $body->read(8192);
+                }
+            })();
+
+            $items = Items::fromIterable($chunks, [
+                'pointer' => ['/response/numFound', '/response/docs']
             ]);
-    }
 
-    private function sanitizeJson(String $data, $responseBody, int $count, $linesOutput = false) {
-        if ($count === 0) {
-            if ($linesOutput) {
-                $data = substr(strstr($data, 'docs":'), 7);
-            } else {
-                $data = substr(strstr($data, 'docs":'), 6);
+            $i = 0;
+            foreach ($items as $item) {
+                // Check document count before any output
+                if ($items->getMatchedJsonPointer() === '/response/numFound') {
+                    if ($item === 0) {
+                        throw new NotFoundHttpException();
+                    }
+                    continue;
+                }
+
+                // Output format header before first document
+                if ($i === 0) {
+                    if ($format === 'mods') {
+                        echo '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+                        echo '<modsCollection xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd">' . PHP_EOL;
+                    } elseif ($format === 'dc') {
+                        echo '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+                        echo '<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' . PHP_EOL;
+                    } elseif ($format === 'json') {
+                        echo '[';
+                    }
+                } elseif ($format === 'json') {
+                    echo ',';
+                }
+
+                if ($format === 'mods') {
+                    echo preg_replace('/<mods[^>]*>/', '<mods>', $item->exportMODS ?? '') . PHP_EOL;
+                } elseif ($format === 'dc') {
+                    echo preg_replace('/<oai_dc:dc[^>]*>/', '<oai_dc:dc>', $item->exportDC ?? '') . PHP_EOL;
+                } elseif ($format === 'ris') {
+                    echo ($item->exportRIS ?? '') . PHP_EOL;
+                } elseif ($format === 'json') {
+                    echo json_encode($item, JSON_UNESCAPED_UNICODE);
+                } elseif ($format === 'jsonl') {
+                    echo json_encode($item, JSON_UNESCAPED_UNICODE) . PHP_EOL;
+                }
+
+                $i++;
             }
-        }
 
-        if ($linesOutput) {
-            $data = str_replace("\n", '', $data);
-            $data = str_replace('{        ', '{', $data);
-            $data = str_replace('},', '}' . PHP_EOL, $data);
-        }
-
-        if ($responseBody->eof()) {
-            if ($linesOutput) {
-                $pos = strrpos($data, ']');
-                $data = ($pos !== false ? substr($data, 0, $pos) : $data) . PHP_EOL;
-            } else {
-                $data = substr($data, 0,-4);
+            if ($i === 0) {
+                throw new NotFoundHttpException();
             }
-        }
 
-        return $data;
-    }
+            if ($format === 'mods') {
+                echo '</modsCollection>';
+            } elseif ($format === 'dc') {
+                echo '</records>';
+            } elseif ($format === 'json') {
+                echo ']';
+            }
 
-    private function sanitizeMods(String $data, $responseBody, int $count) {
-        if ($count === 0) {
-            // remove solr export field name
-            $data = substr(strstr($data, 'exportMODS":"'), 13);
-
-            // remove mods node because of namespace declaration
-            $data = preg_replace("/<mods[^>]*>/", '<mods>', $data);
-
-            // add XML header and a root element if more than 2 documents
-            $extendData = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-            $extendData = $extendData . '<modsCollection xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd">' . PHP_EOL;
-            $data = $extendData . $data;
-        }
-
-        $replaceArray = ['"', PHP_EOL];
-        $searchArray = ['\"', '\n'];
-        // json format sanitizing
-        $data = preg_replace('/"},[^:]*:"|"},\s*[{},]*\s*{|"}\]\s*}}|"exportMODS":"/', PHP_EOL, $data);
-        $data = preg_replace('/^\s*/', '', $data);
-        $data = str_replace($searchArray, $replaceArray, $data);
-        // remove mods node because of namespace declaration
-        $data = preg_replace("/<mods[^>C]*>/", '<mods>', $data);
-
-        $data = preg_replace('/"\s*},{|"\s*}]\s*}|}]\s*}/','', $data);
-
-        $data = preg_replace('/},[{\s},]*{/', '', $data);
-
-        if ($responseBody->eof()) {
-            // remove end of json brackets if only one document is given
-            $data = preg_replace('/"\}\]\n.*\}\}\n/', '', $data);
-            // remove end of json brackets if multiple documents are given
-            $data = preg_replace('/"\},\n.*\{\}\]\n.*\}\}\n/', '', $data);
-            $data = $data .'</modsCollection>';
-        }
-
-        return $data;
-    }
-
-    private function sanitizeDublinCore(String $data, $responseBody, $count) {
-        if ($count === 0) {
-            // remove solr export field name
-            $data = substr(strstr($data, 'exportDC":"'), 11);
-
-            // remove mods node because of namespace declaration
-            $data = preg_replace("/<oai_dc:dc[^>]*>/", '<oai_dc:dc>', $data);
-
-            // add XML header and a root element if more than 2 documents
-            $extendData = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-            $extendData = $extendData . '<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' . PHP_EOL;
-            $data = $extendData . $data;
-        }
-
-        $replaceArray = ['"', PHP_EOL];
-        $searchArray = ['\"', '\n'];
-//        // json format sanitizing
-        $data = preg_replace('/"},[^:]*:"|"},\s*[{},]*\s*{|"}\]\s*}}|"exportDC":"/', PHP_EOL, $data);
-        $data = preg_replace('/^\s*/', '', $data);
-        $data = str_replace($searchArray, $replaceArray, $data);
-        // remove mods node because of namespace declaration
-        $data = preg_replace("/<oai_dc:dc[^>C]*>/", '<oai_dc:dc>', $data);
-
-        $data = preg_replace('/"\s*},{|"\s*}]\s*}|}]\s*}/','', $data);
-
-        $data = preg_replace('/},[{\s},]*{/', '', $data);
-
-        if ($responseBody->eof()) {
-            // remove end of json brackets if only one document is given
-            $data = preg_replace('/\}\]\n.*\}\}/', '', $data);
-            // remove end of json brackets if multiple documents are given
-            $data = preg_replace('/\},\n.*\{\}\]\n.*\}\}/', '', $data);
-            $data = $data .'</records>';
-        }
-
-        return $data;
-    }
-
-    private function sanitizeRis(String $data, $responseBody, $count) {
-        if ($count === 0) {
-            // remove solr export field name
-            $data = substr(strstr($data, 'exportRIS":"'), 12);
-        }
-        $data = preg_replace('/"},[^:]*:"|"},\s*[{},]*\s*{|"}\]\s*}}|"exportRIS":"/',PHP_EOL, $data);
-        $data = str_replace('\n', PHP_EOL, $data);
-        $data = str_replace('\"', '"', $data);
-
-        $data = preg_replace('/"\s*},{|"\s*}]\s*}|}]\s*}/','', $data);
-
-        $data = preg_replace('/},[{\s},]*{/', '', $data);
-
-//        if ($responseBody->eof()) {
-//            $data = substr($data, 0, -9);
-//        }
-
-        return $data;
+        }, 200, [
+            'content-type' => $contentType,
+            'Access-Control-Allow-Origin' => '*',
+        ]);
     }
 
     public function formattingResponse($solrQueryParams, $format, $client)
