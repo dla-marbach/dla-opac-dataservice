@@ -136,8 +136,9 @@ class Controller extends BaseController
 
                 if ($j === 0) {
                     // check if format has no documents
-                    if ($format === 'csv') {
-                        if ((strlen($data) + strlen($dataRemaining)) < 6000) {
+                    if ($format === 'csv' || $format === 'tsv') {
+                        $lineCount = substr_count($data . $dataRemaining, PHP_EOL);
+                        if ($lineCount <= 1) {
                             // Throw not found exception if solr returns 0 documents
                             throw new NotFoundHttpException();
                         }
@@ -312,6 +313,12 @@ class Controller extends BaseController
             $format = 'csv';
             $solrQueryParams['query']['wt'] = 'csv';
             $filename = 'export.csv';
+        } else if ($format === 'tsv' || $format === '.tsv') {
+            $format = 'tsv';
+            $solrQueryParams['query']['wt'] = 'csv';
+            $solrQueryParams['query']['csv.separator'] = "\t";
+            $filename = 'export.tsv';
+            $contentType = 'text/tab-separated-values; charset=utf-8';
         } else if ($format === 'json' || $format === '.json') {
             $format = 'json';
             $solrQueryParams['query']['wt'] = 'json';
