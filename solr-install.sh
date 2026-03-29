@@ -1,7 +1,7 @@
 #!/bin/bash
 # Installation
 mkdir -p solr
-wget -q --compression=auto --show-progress -O solr.tgz https://www.apache.org/dyn/closer.lua/solr/solr/9.8.1/solr-9.8.1-slim.tgz?action=download
+wget -q --compression=auto --show-progress -O solr.tgz https://www.apache.org/dyn/closer.lua/solr/solr/9.10.0/solr-9.10.0-slim.tgz?action=download
 tar -xzf solr.tgz -C solr --strip 1 && rm solr.tgz
 # Konfiguration aus dla-opac-transform repo laden
 mkdir -p "solr/server/solr/dla/conf"
