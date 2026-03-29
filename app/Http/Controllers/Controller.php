@@ -366,13 +366,28 @@ class Controller extends BaseController
         $solrQueryParams = $this->transformGivenParameter($request);
         $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
 
-        $format = 'json';
+        if ($request->input('format')) {
+            $format = $request->input('format');
+        } else {
+            $format = 'json';
+        }
+
         $solrQueryParams['query']['rows'] = 0;
 
         if ($solrQueryParams['query']['q']) {
             $solrQueryParams['query']['q'] = config('dla_solr.staticFilter') . ' AND ' . $solrQueryParams['query']['q'];
         } else {
             $solrQueryParams['query']['q'] = config('dla_solr.staticFilter');
+        }
+
+        if ($format === 'ris') {
+            $solrQueryParams['query']['q'] = $solrQueryParams['query']['q'] . ' AND exportRIS:*';
+        }
+        if ($format === 'mods') {
+            $solrQueryParams['query']['q'] = $solrQueryParams['query']['q'] . ' AND exportMODS:*';
+        }
+        if ($format === 'dc') {
+            $solrQueryParams['query']['q'] = $solrQueryParams['query']['q'] . ' AND exportDC:*';
         }
 
         // count documents
