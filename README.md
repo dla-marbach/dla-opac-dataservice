@@ -36,7 +36,7 @@ Der Parameter `size=50` liefert nur die ersten 50 Treffer und ist hier bei den m
 * Paginierung:<br>
 [https://dataservice.dla-marbach.de/v1/records?q=Marbach **&from=51** &size=50](https://dataservice.dla-marbach.de/v1/records?q=Marbach&from=51&size=50)
 
-* Formate `(json, jsonl, dc, mods, ris`):<br>
+* Formate `(json, jsonl, tsv, dc, mods, ris`):<br>
 [https://dataservice.dla-marbach.de/v1/records?q=Marbach **&format=dc** &size=50](https://dataservice.dla-marbach.de/v1/records?q=Marbach&format=dc&size=50)
 
 * Einzelner Datensatz:<br>
