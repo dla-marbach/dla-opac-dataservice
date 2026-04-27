@@ -166,7 +166,11 @@
         "/info/schema": {
             "get": {
                 "description": "Liefert Informationen über alle selektierbaren Felder und ihre Datentypen.\n\nWeitere Informationen zum Datenmodell und den Feldbezeichnungen finden sich auf [GitHub](https://github.com/dla-marbach/dla-opac-transform/blob/main/docs/README.md).",
-                "parameters": [],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/formatInQuery"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
