@@ -232,7 +232,8 @@
                         "jsonl",
                         "ris",
                         "mods",
-                        "dc"
+                        "dc",
+                        "tsv"
                     ],
                     "default": "json"
                 }
