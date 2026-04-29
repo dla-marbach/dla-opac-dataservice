@@ -127,16 +127,16 @@ class Controller extends BaseController
 
             // CSV and TSV are native Solr formats — stream directly without JSON parsing
             if ($format === 'csv' || $format === 'tsv') {
-                $firstChunk = true;
+                $buffer = '';
+                while (!$body->eof() && substr_count($buffer, PHP_EOL) <= 1) {
+                    $buffer .= $body->read(8192);
+                }
+                if (substr_count($buffer, PHP_EOL) <= 1) {
+                    throw new NotFoundHttpException();
+                }
+                echo $buffer;
                 while (!$body->eof()) {
-                    $chunk = $body->read(8192);
-                    if ($firstChunk) {
-                        if (substr_count($chunk, PHP_EOL) <= 1) {
-                            throw new NotFoundHttpException();
-                        }
-                        $firstChunk = false;
-                    }
-                    echo $chunk;
+                    echo $body->read(8192);
                 }
                 return;
             }
