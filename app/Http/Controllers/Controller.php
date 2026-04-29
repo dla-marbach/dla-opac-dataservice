@@ -217,12 +217,18 @@ class Controller extends BaseController
             $format = 'csv';
             $solrQueryParams['query']['wt'] = 'csv';
             $filename = 'export.csv';
+            if (!isset($solrQueryParams['query']['fl'])) {
+                $solrQueryParams['query']['fl'] = $this->getDefaultFieldList();
+            }
         } else if ($format === 'tsv' || $format === '.tsv') {
             $format = 'tsv';
             $solrQueryParams['query']['wt'] = 'csv';
             $solrQueryParams['query']['csv.separator'] = "\t";
             $filename = 'export.tsv';
             $contentType = 'text/tab-separated-values; charset=utf-8';
+            if (!isset($solrQueryParams['query']['fl'])) {
+                $solrQueryParams['query']['fl'] = $this->getDefaultFieldList();
+            }
         } else if ($format === 'json' || $format === '.json') {
             $format = 'json';
             $solrQueryParams['query']['wt'] = 'json';
