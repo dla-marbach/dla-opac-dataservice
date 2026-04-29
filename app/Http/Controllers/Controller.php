@@ -224,8 +224,9 @@ class Controller extends BaseController
             $format = 'tsv';
             $solrQueryParams['query']['wt'] = 'csv';
             $solrQueryParams['query']['csv.separator'] = "\t";
+            $solrQueryParams['query']['csv.mv.separator'] = "\n";
             $filename = 'export.tsv';
-            $contentType = 'text/tab-separated-values; charset=utf-8';
+            //$contentType = 'text/csv; charset=utf-8';
             if (!isset($solrQueryParams['query']['fl'])) {
                 $solrQueryParams['query']['fl'] = $this->getDefaultFieldList();
             }
