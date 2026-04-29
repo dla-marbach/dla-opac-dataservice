@@ -263,8 +263,6 @@ class Controller extends BaseController
         $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
         $solrQueryParams['query']['q'] = config('dla_solr.staticFilter') . ' AND id:(' . $id . ')';
 
-        ob_end_clean();
-
         return $this->formattingResponse($solrQueryParams, $format, $client);
 
     }
@@ -329,8 +327,6 @@ class Controller extends BaseController
             $solrQueryParams['query']['q'] = config('dla_solr.staticFilter');
         }
 
-        ob_end_clean();
-
         return $this->formattingResponse($solrQueryParams, $format, $client);
     }
 
@@ -355,8 +351,6 @@ class Controller extends BaseController
         }
         $convertIdToQuery .= ')';
         $solrQueryParams['query']['q'] .= $convertIdToQuery;
-
-        ob_end_clean();
 
         return $this->formattingResponse($solrQueryParams, $format, $client);
     }
