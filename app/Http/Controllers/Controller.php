@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Facade\FlareClient\Http\Exceptions\NotFound;
 use GuzzleHttp\Client as Client;
 use JsonMachine\Items;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -10,7 +9,6 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Controller extends BaseController
 {
@@ -134,14 +132,6 @@ class Controller extends BaseController
 
             // CSV and TSV are native Solr formats — stream directly without JSON parsing
             if ($format === 'csv' || $format === 'tsv') {
-                $buffer = '';
-                while (!$body->eof() && substr_count($buffer, PHP_EOL) <= 1) {
-                    $buffer .= $body->read(8192);
-                }
-                if (substr_count($buffer, PHP_EOL) <= 1) {
-                    throw new NotFoundHttpException();
-                }
-                echo $buffer;
                 while (!$body->eof()) {
                     echo $body->read(8192);
                 }
@@ -155,20 +145,10 @@ class Controller extends BaseController
                 }
             })();
 
-            $items = Items::fromIterable($chunks, [
-                'pointer' => ['/response/numFound', '/response/docs']
-            ]);
+            $items = Items::fromIterable($chunks, ['pointer' => '/response/docs']);
 
             $i = 0;
             foreach ($items as $item) {
-                // Check document count before any output
-                if ($items->getMatchedJsonPointer() === '/response/numFound') {
-                    if ($item === 0) {
-                        throw new NotFoundHttpException();
-                    }
-                    continue;
-                }
-
                 // Output format header before first document
                 if ($i === 0) {
                     if ($format === 'mods') {
@@ -199,10 +179,6 @@ class Controller extends BaseController
                 $i++;
             }
 
-            if ($i === 0) {
-                throw new NotFoundHttpException();
-            }
-
             if ($format === 'mods') {
                 echo '</modsCollection>';
             } elseif ($format === 'dc') {
@@ -219,6 +195,16 @@ class Controller extends BaseController
 
     public function formattingResponse($solrQueryParams, $format, $client)
     {
+        $countParams = ['query' => [
+            'q'   => $solrQueryParams['query']['q'],
+            'rows' => 0,
+            'wt'  => 'json',
+        ]];
+        $countJson = json_decode($client->request('GET', 'select', $countParams)->getBody()->getContents());
+        if (($countJson->response->numFound ?? 0) === 0) {
+            return response('', 204)->header('Access-Control-Allow-Origin', '*');
+        }
+
         $contentType = 'application/json; charset=utf-8';
         if ($format === 'csv' || $format === '.csv') {
             $format = 'csv';
