@@ -197,16 +197,6 @@ class Controller extends BaseController
 
     public function formattingResponse($solrQueryParams, $format, $client)
     {
-        $countParams = ['query' => [
-            'q'   => $solrQueryParams['query']['q'],
-            'rows' => 0,
-            'wt'  => 'json',
-        ]];
-        $countJson = json_decode($client->request('GET', 'select', $countParams)->getBody()->getContents());
-        if (($countJson->response->numFound ?? 0) === 0) {
-            return response('', 204)->header('Access-Control-Allow-Origin', '*');
-        }
-
         $contentType = 'application/json; charset=utf-8';
         if ($format === 'csv' || $format === '.csv') {
             $format = 'csv';
@@ -261,6 +251,18 @@ class Controller extends BaseController
             $solrQueryParams['query']['wt'] = 'json';
             $filename = 'export.json';
             $contentType = 'application/json; charset=utf-8';
+        }
+
+        $countParams = ['query' => array_filter([
+            'q'    => $solrQueryParams['query']['q'],
+            'rows' => 1,
+            'wt'   => 'json',
+            'fl'   => $solrQueryParams['query']['fl'] ?? null,
+        ], fn($v) => $v !== null)];
+        $countJson = json_decode($client->request('GET', 'select', $countParams)->getBody()->getContents());
+        $firstDoc = $countJson->response->docs[0] ?? null;
+        if (($countJson->response->numFound ?? 0) === 0 || empty($countJson->response->docs) || empty((array) $firstDoc)) {
+            return response('', 204)->header('Access-Control-Allow-Origin', '*');
         }
 
         $solrQueryParams['stream'] = true;
