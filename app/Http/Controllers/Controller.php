@@ -51,7 +51,9 @@ class Controller extends BaseController
         }
 
         if ($request->input('q')) {
-            $solrParamArray['query']['q'] = $request->input('q');
+            $q = $request->input('q');
+            $q = preg_replace('/(\w+)\s*:\s*\("RANGE\s+(\d+)\s+TO\s+(\d+)"\)/', '$1:[$2 TO $3]', $q);
+            $solrParamArray['query']['q'] = $q;
         }
 
         if ($request->input('fields')) {
