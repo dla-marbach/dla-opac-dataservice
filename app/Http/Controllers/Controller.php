@@ -205,13 +205,21 @@ class Controller extends BaseController
             if (!isset($solrQueryParams['query']['fl'])) {
                 $solrQueryParams['query']['fl'] = $this->getDefaultFieldList();
             }
+        } else if ($format === 'tsv-light' || $format === '.tsv-light') {
+            $format = 'tsv';
+            $solrQueryParams['query']['wt'] = 'csv';
+            $solrQueryParams['query']['fl'] = 'ID,URL,display,displayName,displayAddition1,displayAddition2,filterType_mv,filterFormContent_mv,filterMedium_mv,dateOrigin,filterAuthority_mv,filterLanguageType_mv,filterLocation_mv,filterSource,filterBibliography_mv,filterCollection_mv,filterDigital';
+            $solrQueryParams['query']['csv.separator'] = "\t";
+            $solrQueryParams['query']['csv.mv.separator'] = "\n";
+            $filename = 'export.tsv';
+            $contentType = 'text/csv; charset=utf-8';
         } else if ($format === 'tsv' || $format === '.tsv') {
             $format = 'tsv';
             $solrQueryParams['query']['wt'] = 'csv';
             $solrQueryParams['query']['csv.separator'] = "\t";
             $solrQueryParams['query']['csv.mv.separator'] = "\n";
             $filename = 'export.tsv';
-            //$contentType = 'text/csv; charset=utf-8';
+            $contentType = 'text/csv; charset=utf-8';
             if (!isset($solrQueryParams['query']['fl'])) {
                 $solrQueryParams['query']['fl'] = $this->getDefaultFieldList();
             }
