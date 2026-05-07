@@ -208,7 +208,7 @@ class Controller extends BaseController
         } else if ($format === 'tsv-light' || $format === '.tsv-light') {
             $format = 'tsv';
             $solrQueryParams['query']['wt'] = 'csv';
-            $solrQueryParams['query']['fl'] = 'ID,URL,display,displayName,displayAddition1,displayAddition2,filterType_mv,filterFormContent_mv,filterMedium_mv,dateOrigin,filterAuthority_mv,filterLanguageType_mv,filterLocation_mv,filterSource,filterBibliography_mv,filterCollection_mv,filterDigital';
+            $solrQueryParams['query']['fl'] = 'display,displayName,displayAddition1,displayAddition2,id,filterAuthority_mv,filterBibliography_mv,filterCollection_mv,filterDateRange_mv,filterDigital,filterFormContent_mv,filterLanguage_mv,filterLocation_mv,filterMedium_mv,filterSource,filterSubject_mv,filterType_mv,url';
             $solrQueryParams['query']['csv.separator'] = "\t";
             $solrQueryParams['query']['csv.mv.separator'] = "\n";
             $filename = 'export.tsv';
