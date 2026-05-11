@@ -17,6 +17,86 @@ class Controller extends BaseController
 
     private static ?string $cachedDefaultFieldList = null;
 
+    private function getRepeatedQueryParameter(Request $request, string $parameterName): array
+    {
+        $values = [];
+        $queryString = $request->server('QUERY_STRING', '');
+
+        if (is_string($queryString) && $queryString !== '') {
+            foreach (explode('&', $queryString) as $queryPart) {
+                if ($queryPart === '') {
+                    continue;
+                }
+
+                [$rawKey, $rawValue] = array_pad(explode('=', $queryPart, 2), 2, '');
+                $decodedKey = urldecode($rawKey);
+
+                if ($decodedKey !== $parameterName && $decodedKey !== $parameterName . '[]') {
+                    continue;
+                }
+
+                $decodedValue = urldecode($rawValue);
+                if ($decodedValue !== '') {
+                    $values[] = $decodedValue;
+                }
+            }
+        }
+
+        if (!empty($values)) {
+            return $values;
+        }
+
+        $fallbackValue = $request->query($parameterName);
+        if (is_string($fallbackValue) && $fallbackValue !== '') {
+            return [$fallbackValue];
+        }
+
+        if (is_array($fallbackValue)) {
+            foreach ($fallbackValue as $value) {
+                if (is_string($value) && $value !== '') {
+                    $values[] = $value;
+                }
+            }
+        }
+
+        return $values;
+    }
+
+    private function buildSolrQueryString(array $queryParams): string
+    {
+        $parts = [];
+
+        foreach ($queryParams as $name => $value) {
+            if ($value === null) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                foreach ($value as $arrayValue) {
+                    if ($arrayValue === null) {
+                        continue;
+                    }
+
+                    $parts[] = rawurlencode((string) $name) . '=' . rawurlencode((string) $arrayValue);
+                }
+                continue;
+            }
+
+            $parts[] = rawurlencode((string) $name) . '=' . rawurlencode((string) $value);
+        }
+
+        return implode('&', $parts);
+    }
+
+    private function requestSolrSelect(Client $client, array $solrQueryParams)
+    {
+        if (isset($solrQueryParams['query']) && is_array($solrQueryParams['query'])) {
+            $solrQueryParams['query'] = $this->buildSolrQueryString($solrQueryParams['query']);
+        }
+
+        return $client->request('GET', 'select', $solrQueryParams);
+    }
+
     private function getDefaultFieldList(): string
     {
         if (self::$cachedDefaultFieldList === null) {
@@ -61,6 +141,11 @@ class Controller extends BaseController
             if ($request->input('fields') !== '*') {
                 $solrParamArray['query']['fl'] = $request->input('fields');
             }
+        }
+
+        $fqValues = $this->getRepeatedQueryParameter($request, 'fq');
+        if (!empty($fqValues)) {
+            $solrParamArray['query']['fq'] = $fqValues;
         }
 
         return $solrParamArray;
@@ -267,7 +352,10 @@ class Controller extends BaseController
             'wt'   => 'json',
             'fl'   => $solrQueryParams['query']['fl'] ?? null,
         ], fn($v) => $v !== null)];
-        $countJson = json_decode($client->request('GET', 'select', $countParams)->getBody()->getContents());
+        if (isset($solrQueryParams['query']['fq'])) {
+            $countParams['query']['fq'] = $solrQueryParams['query']['fq'];
+        }
+        $countJson = json_decode($this->requestSolrSelect($client, $countParams)->getBody()->getContents());
         $firstDoc = $countJson->response->docs[0] ?? null;
         if (($countJson->response->numFound ?? 0) === 0 || empty($countJson->response->docs) || empty((array) $firstDoc)) {
             return response('', 204)->header('Access-Control-Allow-Origin', '*');
@@ -275,7 +363,7 @@ class Controller extends BaseController
 
         $solrQueryParams['stream'] = true;
 
-        $response = $client->request('GET', 'select', $solrQueryParams);
+        $response = $this->requestSolrSelect($client, $solrQueryParams);
 
         return $this->responseFilter($response, $format, $contentType, $filename);
     }
@@ -323,7 +411,7 @@ class Controller extends BaseController
         }
 
         // count documents
-        $response = $client->request('GET', 'select', $solrQueryParams);
+        $response = $this->requestSolrSelect($client, $solrQueryParams);
         $responseBody = $response->getBody();
         $jsonResponse = json_decode($responseBody->getContents());
 
