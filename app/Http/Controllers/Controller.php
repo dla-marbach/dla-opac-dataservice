@@ -212,21 +212,67 @@ class Controller extends BaseController
             ->header('Access-Control-Allow-Origin', '*');
     }
 
-    public function responseFilter($response, $format, $contentType, $filename = '')
+    public function responseFilter($response, $format, $contentType, $filename = '', Request $request = null)
     {
-        return response()->stream(function() use($response, $format) {
+        $useGzip = false;
+        if ($request !== null) {
+            foreach (explode(',', $request->header('Accept-Encoding', '')) as $token) {
+                if (strtolower(trim(explode(';', $token, 2)[0])) === 'gzip') {
+                    $useGzip = true;
+                    break;
+                }
+            }
+        }
+
+        $headers = [
+            'content-type'                => $contentType,
+            'Access-Control-Allow-Origin' => '*',
+        ];
+
+        if ($useGzip) {
+            $headers['Content-Encoding'] = 'gzip';
+        }
+
+        return response()->stream(function () use ($response, $format, $useGzip) {
+            $deflateContext = $useGzip ? deflate_init(ZLIB_ENCODING_GZIP, ['level' => 6]) : null;
+            if ($useGzip && $deflateContext === false) {
+                logger()->warning('deflate_init failed; falling back to uncompressed streaming');
+                $deflateContext = null;
+            }
+
+            $outputChunk = function (string $data) use ($deflateContext): void {
+                if ($deflateContext !== null) {
+                    $compressed = deflate_add($deflateContext, $data, ZLIB_SYNC_FLUSH);
+                    if ($compressed === false) {
+                        logger()->warning('deflate_add failed; chunk skipped');
+                        return;
+                    }
+                    echo $compressed;
+                } else {
+                    echo $data;
+                }
+            };
+
             $body = $response->getBody();
 
             // CSV and TSV are native Solr formats — stream directly without JSON parsing
             if ($format === 'csv' || $format === 'tsv') {
                 while (!$body->eof()) {
-                    echo $body->read(8192);
+                    $outputChunk($body->read(8192));
+                }
+                if ($deflateContext !== null) {
+                    $final = deflate_add($deflateContext, '', ZLIB_FINISH);
+                    if ($final !== false) {
+                        echo $final;
+                    } else {
+                        logger()->warning('deflate_add FINISH failed for csv/tsv');
+                    }
                 }
                 return;
             }
 
             // All other formats: use json-machine for robust streaming JSON parsing
-            $chunks = (function() use ($body) {
+            $chunks = (function () use ($body) {
                 while (!$body->eof()) {
                     yield $body->read(8192);
                 }
@@ -239,48 +285,53 @@ class Controller extends BaseController
                 // Output format header before first document
                 if ($i === 0) {
                     if ($format === 'mods') {
-                        echo '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-                        echo '<modsCollection xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd">' . PHP_EOL;
+                        $outputChunk('<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL);
+                        $outputChunk('<modsCollection xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd">' . PHP_EOL);
                     } elseif ($format === 'dc') {
-                        echo '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-                        echo '<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' . PHP_EOL;
+                        $outputChunk('<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL);
+                        $outputChunk('<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' . PHP_EOL);
                     } elseif ($format === 'json') {
-                        echo '[';
+                        $outputChunk('[');
                     }
                 } elseif ($format === 'json') {
-                    echo ',';
+                    $outputChunk(',');
                 }
 
                 if ($format === 'mods') {
-                    echo preg_replace('/<mods[^>]*>/', '<mods>', $item->exportMODS ?? '') . PHP_EOL;
+                    $outputChunk(preg_replace('/<mods[^>]*>/', '<mods>', $item->exportMODS ?? '') . PHP_EOL);
                 } elseif ($format === 'dc') {
-                    echo preg_replace('/<oai_dc:dc[^>]*>/', '<oai_dc:dc>', $item->exportDC ?? '') . PHP_EOL;
+                    $outputChunk(preg_replace('/<oai_dc:dc[^>]*>/', '<oai_dc:dc>', $item->exportDC ?? '') . PHP_EOL);
                 } elseif ($format === 'ris') {
-                    echo ($item->exportRIS ?? '') . PHP_EOL;
+                    $outputChunk(($item->exportRIS ?? '') . PHP_EOL);
                 } elseif ($format === 'json') {
-                    echo json_encode($item, JSON_UNESCAPED_UNICODE);
+                    $outputChunk(json_encode($item, JSON_UNESCAPED_UNICODE));
                 } elseif ($format === 'jsonl') {
-                    echo json_encode($item, JSON_UNESCAPED_UNICODE) . PHP_EOL;
+                    $outputChunk(json_encode($item, JSON_UNESCAPED_UNICODE) . PHP_EOL);
                 }
 
                 $i++;
             }
 
             if ($format === 'mods') {
-                echo '</modsCollection>';
+                $outputChunk('</modsCollection>');
             } elseif ($format === 'dc') {
-                echo '</records>';
+                $outputChunk('</records>');
             } elseif ($format === 'json') {
-                echo ']';
+                $outputChunk(']');
             }
 
-        }, 200, [
-            'content-type' => $contentType,
-            'Access-Control-Allow-Origin' => '*',
-        ]);
+            if ($deflateContext !== null) {
+                $final = deflate_add($deflateContext, '', ZLIB_FINISH);
+                if ($final !== false) {
+                    echo $final;
+                } else {
+                    logger()->warning('deflate_add FINISH failed');
+                }
+            }
+        }, 200, $headers);
     }
 
-    public function formattingResponse($solrQueryParams, $format, $client)
+    public function formattingResponse($solrQueryParams, $format, $client, Request $request = null)
     {
         $contentType = 'application/json; charset=utf-8';
         if ($format === 'csv' || $format === '.csv') {
@@ -365,7 +416,7 @@ class Controller extends BaseController
 
         $response = $this->requestSolrSelect($client, $solrQueryParams);
 
-        return $this->responseFilter($response, $format, $contentType, $filename);
+        return $this->responseFilter($response, $format, $contentType, $filename, $request);
     }
 
     public function getRecord(Request $request, $id, $format = 'json')
@@ -376,7 +427,7 @@ class Controller extends BaseController
         $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
         $solrQueryParams['query']['q'] = config('dla_solr.staticFilter') . ' AND id:(' . $id . ')';
 
-        return $this->formattingResponse($solrQueryParams, $format, $client);
+        return $this->formattingResponse($solrQueryParams, $format, $client, $request);
 
     }
 
@@ -440,7 +491,7 @@ class Controller extends BaseController
             $solrQueryParams['query']['q'] = config('dla_solr.staticFilter');
         }
 
-        return $this->formattingResponse($solrQueryParams, $format, $client);
+        return $this->formattingResponse($solrQueryParams, $format, $client, $request);
     }
 
     public function getRecordsById(Request $request, $format = 'json')
@@ -465,7 +516,7 @@ class Controller extends BaseController
         $convertIdToQuery .= ')';
         $solrQueryParams['query']['q'] .= $convertIdToQuery;
 
-        return $this->formattingResponse($solrQueryParams, $format, $client);
+        return $this->formattingResponse($solrQueryParams, $format, $client, $request);
     }
 
     public function getCollection(Request $request, $id, $format = 'json')
