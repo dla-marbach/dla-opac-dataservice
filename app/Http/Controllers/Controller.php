@@ -17,6 +17,16 @@ class Controller extends BaseController
 
     private static ?string $cachedDefaultFieldList = null;
 
+    private function solrClientOptions(string $baseUri): array
+    {
+        return [
+            'base_uri'       => $baseUri,
+            'timeout'        => 0,
+            'connect_timeout' => 10,
+            'read_timeout'   => 0,
+        ];
+    }
+
     private function getRepeatedQueryParameter(Request $request, string $parameterName): array
     {
         $values = [];
@@ -100,7 +110,7 @@ class Controller extends BaseController
     private function getDefaultFieldList(): string
     {
         if (self::$cachedDefaultFieldList === null) {
-            $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/config/']);
+            $client = new Client($this->solrClientOptions(config('dla_solr.base_uri') . config('dla_solr.core') . '/config/'));
             $response = $client->request('GET', 'requestHandler', ['componentName' => '/select']);
             $jsonResponse = json_decode($response->getBody()->getContents());
             $select = '/select';
@@ -115,6 +125,8 @@ class Controller extends BaseController
         if ($request->input('sort')) {
             // comma separated
             $solrParamArray['query']['sort'] = $request->input('sort');
+        } else {
+            $solrParamArray['query']['sort'] = 'id asc';
         }
 
         if ($request->input('size')) {
@@ -124,7 +136,7 @@ class Controller extends BaseController
         }
 
         if ($request->input('from')) {
-            $solrParamArray['query']['start'] = intval($request->input('from') - 1);
+            $solrParamArray['query']['start'] = intval($request->input('from'));
             if ($solrParamArray['query']['start'] < 0) {
                 $solrParamArray['query']['start'] = 0;
             }
@@ -157,7 +169,7 @@ class Controller extends BaseController
         $core = config('dla_solr.core');
 
         // count documents using staticFilter
-        $countClient = new Client(['base_uri' => config('dla_solr.base_uri') . $core . '/select']);
+        $countClient = new Client($this->solrClientOptions(config('dla_solr.base_uri') . $core . '/select'));
         $countParams['query']['q'] = config('dla_solr.staticFilter');
         $countParams['query']['rows'] = 0;
         $countResponse = $countClient->request('GET', 'select', $countParams);
@@ -165,7 +177,7 @@ class Controller extends BaseController
         $docCount = $countJson->response->numFound ?? 0;
 
         // get lastModified from admin endpoint
-        $adminClient = new Client(['base_uri' => config('dla_solr.base_uri') . 'admin/']);
+        $adminClient = new Client($this->solrClientOptions(config('dla_solr.base_uri') . 'admin/'));
         $adminResponse = $adminClient->request('GET', 'cores', ['action' => 'STATUS']);
         $adminJson = json_decode($adminResponse->getBody()->getContents());
 
@@ -190,7 +202,7 @@ class Controller extends BaseController
     public function getInfoSchema()
     {
         // count documents
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/' . 'schema/']);
+        $client = new Client($this->solrClientOptions(config('dla_solr.base_uri') . config('dla_solr.core') . '/' . 'schema/'));
         $solrQueryParams['query']['wt'] = 'json';
 
         $response = $client->request('GET', 'fields', $solrQueryParams);
@@ -234,6 +246,7 @@ class Controller extends BaseController
         }
 
         return response()->stream(function () use ($response, $format, $useGzip) {
+            set_time_limit(0);
             $deflateContext = $useGzip ? deflate_init(ZLIB_ENCODING_GZIP, ['level' => 6]) : null;
             if ($useGzip && $deflateContext === false) {
                 logger()->warning('deflate_init failed; falling back to uncompressed streaming');
@@ -251,6 +264,7 @@ class Controller extends BaseController
                 } else {
                     echo $data;
                 }
+                flush();
             };
 
             $body = $response->getBody();
@@ -264,6 +278,7 @@ class Controller extends BaseController
                     $final = deflate_add($deflateContext, '', ZLIB_FINISH);
                     if ($final !== false) {
                         echo $final;
+                        flush();
                     } else {
                         logger()->warning('deflate_add FINISH failed for csv/tsv');
                     }
@@ -324,6 +339,7 @@ class Controller extends BaseController
                 $final = deflate_add($deflateContext, '', ZLIB_FINISH);
                 if ($final !== false) {
                     echo $final;
+                    flush();
                 } else {
                     logger()->warning('deflate_add FINISH failed');
                 }
@@ -348,14 +364,14 @@ class Controller extends BaseController
             $solrQueryParams['query']['csv.separator'] = "\t";
             $solrQueryParams['query']['csv.mv.separator'] = "\n";
             $filename = 'export.tsv';
-            $contentType = 'text; charset=utf-8';
+            $contentType = 'text/plain; charset=utf-8';
         } else if ($format === 'tsv' || $format === '.tsv') {
             $format = 'tsv';
             $solrQueryParams['query']['wt'] = 'csv';
             $solrQueryParams['query']['csv.separator'] = "\t";
             $solrQueryParams['query']['csv.mv.separator'] = "\n";
             $filename = 'export.tsv';
-            $contentType = 'text; charset=utf-8';
+            $contentType = 'text/plain; charset=utf-8';
             if (!isset($solrQueryParams['query']['fl'])) {
                 $solrQueryParams['query']['fl'] = $this->getDefaultFieldList();
             }
@@ -371,7 +387,7 @@ class Controller extends BaseController
             $format = 'ris';
             $solrQueryParams['query']['fl'] = 'exportRIS';
             $filename = 'export.ris';
-            $contentType = 'text; charset=utf-8';
+            $contentType = 'text/plain; charset=utf-8';
         } else if ($format === 'mods' || $format === '.mods') {
             $format = 'mods';
             $solrQueryParams['query']['fl'] = 'exportMODS';
@@ -424,7 +440,7 @@ class Controller extends BaseController
         $solrQueryParams = [];
         $solrQueryParams = $this->transformGivenParameter($request);
 
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
+        $client = new Client($this->solrClientOptions(config('dla_solr.base_uri') . config('dla_solr.core') . '/select'));
         $solrQueryParams['query']['q'] = config('dla_solr.staticFilter') . ' AND id:(' . $id . ')';
 
         return $this->formattingResponse($solrQueryParams, $format, $client, $request);
@@ -435,7 +451,7 @@ class Controller extends BaseController
     {
         $solrQueryParams = [];
         $solrQueryParams = $this->transformGivenParameter($request);
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
+        $client = new Client($this->solrClientOptions(config('dla_solr.base_uri') . config('dla_solr.core') . '/select'));
 
         if ($request->input('format')) {
             $format = $request->input('format');
@@ -477,7 +493,7 @@ class Controller extends BaseController
         $solrQueryParams = [];
         $solrQueryParams = $this->transformGivenParameter($request);
 
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
+        $client = new Client($this->solrClientOptions(config('dla_solr.base_uri') . config('dla_solr.core') . '/select'));
 
         if ($request->input('format')) {
             $format = $request->input('format');
@@ -496,7 +512,7 @@ class Controller extends BaseController
 
     public function getRecordsById(Request $request, $format = 'json')
     {
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/']);
+        $client = new Client($this->solrClientOptions(config('dla_solr.base_uri') . config('dla_solr.core') . '/'));
         $solrQueryParams = [];
         $solrQueryParams['query']['q'] = config('dla_solr.staticFilter');
 
