@@ -136,7 +136,7 @@ class Controller extends BaseController
         }
 
         if ($request->input('from')) {
-            $solrParamArray['query']['start'] = intval($request->input('from'));
+            $solrParamArray['query']['start'] = intval($request->input('from') - 1);
             if ($solrParamArray['query']['start'] < 0) {
                 $solrParamArray['query']['start'] = 0;
             }
