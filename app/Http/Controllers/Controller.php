@@ -125,8 +125,6 @@ class Controller extends BaseController
         if ($request->input('sort')) {
             // comma separated
             $solrParamArray['query']['sort'] = $request->input('sort');
-        } else {
-            $solrParamArray['query']['sort'] = 'id asc';
         }
 
         if ($request->input('size')) {
