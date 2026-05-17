@@ -214,13 +214,48 @@ class Controller extends BaseController
 
     public function responseFilter($response, $format, $contentType, $filename = '')
     {
-        return response()->stream(function() use($response, $format) {
+        $acceptsGzip = function_exists('deflate_init')
+            && str_contains(request()->header('Accept-Encoding', ''), 'gzip');
+
+        $headers = [
+            'content-type' => $contentType,
+            'Access-Control-Allow-Origin' => '*',
+        ];
+
+        if ($acceptsGzip) {
+            $headers['Content-Encoding'] = 'gzip';
+        }
+
+        return response()->stream(function() use($response, $format, $acceptsGzip) {
+            $ctx = null;
+            if ($acceptsGzip) {
+                $result = deflate_init(ZLIB_ENCODING_GZIP);
+                $ctx = ($result !== false) ? $result : null;
+            }
+
+            $write = function(string $data) use ($ctx, $acceptsGzip): void {
+                if ($acceptsGzip && $ctx !== null) {
+                    $compressed = deflate_add($ctx, $data, ZLIB_SYNC_FLUSH);
+                    if ($compressed !== false) {
+                        echo $compressed;
+                    }
+                } else {
+                    echo $data;
+                }
+            };
+
             $body = $response->getBody();
 
             // CSV and TSV are native Solr formats — stream directly without JSON parsing
             if ($format === 'csv' || $format === 'tsv') {
                 while (!$body->eof()) {
-                    echo $body->read(8192);
+                    $write($body->read(8192));
+                }
+                if ($acceptsGzip && $ctx !== null) {
+                    $final = deflate_add($ctx, '', ZLIB_FINISH);
+                    if ($final !== false) {
+                        echo $final;
+                    }
                 }
                 return;
             }
@@ -239,45 +274,49 @@ class Controller extends BaseController
                 // Output format header before first document
                 if ($i === 0) {
                     if ($format === 'mods') {
-                        echo '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-                        echo '<modsCollection xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd">' . PHP_EOL;
+                        $write('<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL);
+                        $write('<modsCollection xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd">' . PHP_EOL);
                     } elseif ($format === 'dc') {
-                        echo '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-                        echo '<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' . PHP_EOL;
+                        $write('<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL);
+                        $write('<records xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">' . PHP_EOL);
                     } elseif ($format === 'json') {
-                        echo '[';
+                        $write('[');
                     }
                 } elseif ($format === 'json') {
-                    echo ',';
+                    $write(',');
                 }
 
                 if ($format === 'mods') {
-                    echo preg_replace('/<mods[^>]*>/', '<mods>', $item->exportMODS ?? '') . PHP_EOL;
+                    $write(preg_replace('/<mods[^>]*>/', '<mods>', $item->exportMODS ?? '') . PHP_EOL);
                 } elseif ($format === 'dc') {
-                    echo preg_replace('/<oai_dc:dc[^>]*>/', '<oai_dc:dc>', $item->exportDC ?? '') . PHP_EOL;
+                    $write(preg_replace('/<oai_dc:dc[^>]*>/', '<oai_dc:dc>', $item->exportDC ?? '') . PHP_EOL);
                 } elseif ($format === 'ris') {
-                    echo ($item->exportRIS ?? '') . PHP_EOL;
+                    $write(($item->exportRIS ?? '') . PHP_EOL);
                 } elseif ($format === 'json') {
-                    echo json_encode($item, JSON_UNESCAPED_UNICODE);
+                    $write(json_encode($item, JSON_UNESCAPED_UNICODE));
                 } elseif ($format === 'jsonl') {
-                    echo json_encode($item, JSON_UNESCAPED_UNICODE) . PHP_EOL;
+                    $write(json_encode($item, JSON_UNESCAPED_UNICODE) . PHP_EOL);
                 }
 
                 $i++;
             }
 
             if ($format === 'mods') {
-                echo '</modsCollection>';
+                $write('</modsCollection>');
             } elseif ($format === 'dc') {
-                echo '</records>';
+                $write('</records>');
             } elseif ($format === 'json') {
-                echo ']';
+                $write(']');
             }
 
-        }, 200, [
-            'content-type' => $contentType,
-            'Access-Control-Allow-Origin' => '*',
-        ]);
+            if ($acceptsGzip && $ctx !== null) {
+                $final = deflate_add($ctx, '', ZLIB_FINISH);
+                if ($final !== false) {
+                    echo $final;
+                }
+            }
+
+        }, 200, $headers);
     }
 
     public function formattingResponse($solrQueryParams, $format, $client)
