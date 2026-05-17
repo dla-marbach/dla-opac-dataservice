@@ -156,9 +156,9 @@ class Controller extends BaseController
         $config = config('dla_collection');
         $core = config('dla_solr.core');
 
-        // count documents using staticFilter
+        // count documents
         $countClient = new Client(['base_uri' => config('dla_solr.base_uri') . $core . '/select']);
-        $countParams['query']['q'] = config('dla_solr.staticFilter');
+        $countParams['query']['q'] = '*:*';
         $countParams['query']['rows'] = 0;
         $countResponse = $countClient->request('GET', 'select', $countParams);
         $countJson = json_decode($countResponse->getBody()->getContents());
@@ -374,7 +374,7 @@ class Controller extends BaseController
         $solrQueryParams = $this->transformGivenParameter($request);
 
         $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
-        $solrQueryParams['query']['q'] = config('dla_solr.staticFilter') . ' AND id:(' . $id . ')';
+        $solrQueryParams['query']['q'] = 'id:' . $id;
 
         return $this->formattingResponse($solrQueryParams, $format, $client);
 
@@ -394,10 +394,8 @@ class Controller extends BaseController
 
         $solrQueryParams['query']['rows'] = 0;
 
-        if ($solrQueryParams['query']['q']) {
-            $solrQueryParams['query']['q'] = config('dla_solr.staticFilter') . ' AND (' . $solrQueryParams['query']['q'] . ')';
-        } else {
-            $solrQueryParams['query']['q'] = config('dla_solr.staticFilter');
+        if (empty($solrQueryParams['query']['q'])) {
+            $solrQueryParams['query']['q'] = '*:*';
         }
 
         if ($format === 'ris') {
@@ -434,10 +432,8 @@ class Controller extends BaseController
             $format = 'json';
         }
 
-        if ($solrQueryParams['query']['q']) {
-            $solrQueryParams['query']['q'] = config('dla_solr.staticFilter') . ' AND (' . $solrQueryParams['query']['q'] . ')';
-        } else {
-            $solrQueryParams['query']['q'] = config('dla_solr.staticFilter');
+        if (empty($solrQueryParams['query']['q'])) {
+            $solrQueryParams['query']['q'] = '*:*';
         }
 
         return $this->formattingResponse($solrQueryParams, $format, $client);
@@ -447,12 +443,11 @@ class Controller extends BaseController
     {
         $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/']);
         $solrQueryParams = [];
-        $solrQueryParams['query']['q'] = config('dla_solr.staticFilter');
 
         $ids = $request->input('ids');
 
         $idsExp = explode(',', $ids);
-        $convertIdToQuery = ' AND id:(';
+        $convertIdToQuery = 'id:(';
         $i = 0;
         foreach ($idsExp as $id) {
             if ($i === 0) {
@@ -463,7 +458,7 @@ class Controller extends BaseController
             $i++;
         }
         $convertIdToQuery .= ')';
-        $solrQueryParams['query']['q'] .= $convertIdToQuery;
+        $solrQueryParams['query']['q'] = $convertIdToQuery;
 
         return $this->formattingResponse($solrQueryParams, $format, $client);
     }

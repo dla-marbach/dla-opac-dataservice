@@ -16,7 +16,6 @@ return [
     */
 
     'base_uri' => env('DLA_SOLR_BASE_URI', ''),
-    'core' => env('DLA_SOLR_BASE_CORE', ''),
-    'staticFilter' => '*'
+    'core' => env('DLA_SOLR_BASE_CORE', '')
 
 ];
