@@ -26,5 +26,4 @@ Route::group(['prefix' => 'v1'], function () {
 
     Route::get('records', ['as' => 'records', 'uses' => 'App\Http\Controllers\Controller@getRecords']);
     Route::get('records/count', ['as' => 'recordsCount', 'uses' => 'App\Http\Controllers\Controller@getRecordsCount']);
-    Route::get('recordsById/{format?}', ['as' => 'recordsById', 'uses' => 'App\Http\Controllers\Controller@getRecordsById']);
 });

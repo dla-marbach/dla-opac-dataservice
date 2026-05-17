@@ -439,30 +439,6 @@ class Controller extends BaseController
         return $this->formattingResponse($solrQueryParams, $format, $client);
     }
 
-    public function getRecordsById(Request $request, $format = 'json')
-    {
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/']);
-        $solrQueryParams = [];
-
-        $ids = $request->input('ids');
-
-        $idsExp = explode(',', $ids);
-        $convertIdToQuery = 'id:(';
-        $i = 0;
-        foreach ($idsExp as $id) {
-            if ($i === 0) {
-                $convertIdToQuery .= $id;
-            } else {
-                $convertIdToQuery .= ' OR ' . $id;
-            }
-            $i++;
-        }
-        $convertIdToQuery .= ')';
-        $solrQueryParams['query']['q'] = $convertIdToQuery;
-
-        return $this->formattingResponse($solrQueryParams, $format, $client);
-    }
-
     public function getCollection(Request $request, $id, $format = 'json')
     {
         $config = config('dla_collection');

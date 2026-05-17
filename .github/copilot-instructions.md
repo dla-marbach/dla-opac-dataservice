@@ -21,6 +21,5 @@
 - Feature tests belong in `tests/Feature`; mock Guzzle responses (rather than hitting live Solr) to keep streaming code deterministic, and remember that `ob_end_clean()` in controllers will interfere with `dump()` debugging.
 - When debugging Solr queries, prefer `logger()->debug()` so streaming responses are not corrupted by stray output; chunked downloads will break if you echo inside the response callbacks.
 ## Patterns To Follow
-- Always validate `ids` inputs (comma-separated list) before calling `getRecordsById()`; feed sanitized IDs into the OR query builder to avoid Solr injection.
 - Sorting expects Solr syntax like `field asc,other desc`; pass the raw string through from user input only after validating allowed fields, ideally via a whitelist derived from the same `/config/requestHandler` metadata used in Swagger.
 - Keep `size` defaults high (currently 10,000,000) only when streaming; for UI or notebook helpers explicitly set lower `size` values to avoid unintended massive exports.
