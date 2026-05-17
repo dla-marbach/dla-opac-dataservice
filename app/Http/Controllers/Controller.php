@@ -297,14 +297,14 @@ class Controller extends BaseController
             $solrQueryParams['query']['csv.separator'] = "\t";
             $solrQueryParams['query']['csv.mv.separator'] = "\n";
             $filename = 'export.tsv';
-            $contentType = 'text; charset=utf-8';
+            $contentType = 'text/plain; charset=utf-8';
         } else if ($format === 'tsv' || $format === '.tsv') {
             $format = 'tsv';
             $solrQueryParams['query']['wt'] = 'csv';
             $solrQueryParams['query']['csv.separator'] = "\t";
             $solrQueryParams['query']['csv.mv.separator'] = "\n";
             $filename = 'export.tsv';
-            $contentType = 'text; charset=utf-8';
+            $contentType = 'text/plain; charset=utf-8';
             if (!isset($solrQueryParams['query']['fl'])) {
                 $solrQueryParams['query']['fl'] = $this->getDefaultFieldList();
             }
@@ -320,7 +320,7 @@ class Controller extends BaseController
             $format = 'ris';
             $solrQueryParams['query']['fl'] = 'exportRIS';
             $filename = 'export.ris';
-            $contentType = 'text; charset=utf-8';
+            $contentType = 'text/plain; charset=utf-8';
         } else if ($format === 'mods' || $format === '.mods') {
             $format = 'mods';
             $solrQueryParams['query']['fl'] = 'exportMODS';
@@ -335,7 +335,7 @@ class Controller extends BaseController
             $format = 'jsonl';
             $solrQueryParams['query']['wt'] = 'json';
             $filename = 'export.json';
-            $contentType = 'application/json; charset=utf-8';
+            $contentType = 'application/jsonl; charset=utf-8';
             if (!isset($solrQueryParams['query']['fl'])) {
                 $solrQueryParams['query']['fl'] = $this->getDefaultFieldList();
             }
