@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,13 +13,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-//Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//    return $request->user();
-//});
+Route::group(['prefix' => 'v1'], function () {
+    Route::get('info', ['as' => 'info', 'uses' => 'App\Http\Controllers\Controller@getInfo']);
+    Route::get('info/schema', ['as' => 'schema', 'uses' => 'App\Http\Controllers\Controller@getInfoSchema']);
 
+    Route::get('collections', ['as' => 'collections', 'uses' => 'App\Http\Controllers\Controller@getCollections']);
+    Route::get('collection/{id}{format?}', ['as' => 'collection', 'uses' => 'App\Http\Controllers\Controller@getCollection'])
+        ->where('id', '[0-9]{1,10}');
 
-//$router->get('/', function () use ($router) {
-////    return $router->app->version();
-////    return 'Welcome to the DLA data microservice';
-//    return view('frontend');
-//});
+    Route::get('record/{id}{format?}', ['as' => 'record', 'uses' => 'App\Http\Controllers\Controller@getRecord'])
+        ->where('id', '[A-Z]{2,4}[0-9]{6,10}');
+
+    Route::get('records', ['as' => 'records', 'uses' => 'App\Http\Controllers\Controller@getRecords']);
+    Route::get('records/count', ['as' => 'recordsCount', 'uses' => 'App\Http\Controllers\Controller@getRecordsCount']);
+});
