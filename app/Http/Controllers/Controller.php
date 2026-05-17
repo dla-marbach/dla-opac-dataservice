@@ -227,11 +227,18 @@ class Controller extends BaseController
         }
 
         return response()->stream(function() use($response, $format, $acceptsGzip) {
-            $ctx = $acceptsGzip ? deflate_init(ZLIB_ENCODING_GZIP) : null;
+            $ctx = null;
+            if ($acceptsGzip) {
+                $result = deflate_init(ZLIB_ENCODING_GZIP);
+                $ctx = ($result !== false) ? $result : null;
+            }
 
             $write = function(string $data) use ($ctx, $acceptsGzip): void {
                 if ($acceptsGzip && $ctx !== null) {
-                    echo deflate_add($ctx, $data, ZLIB_SYNC_FLUSH);
+                    $compressed = deflate_add($ctx, $data, ZLIB_SYNC_FLUSH);
+                    if ($compressed !== false) {
+                        echo $compressed;
+                    }
                 } else {
                     echo $data;
                 }
@@ -245,7 +252,10 @@ class Controller extends BaseController
                     $write($body->read(8192));
                 }
                 if ($acceptsGzip && $ctx !== null) {
-                    echo deflate_add($ctx, '', ZLIB_FINISH);
+                    $final = deflate_add($ctx, '', ZLIB_FINISH);
+                    if ($final !== false) {
+                        echo $final;
+                    }
                 }
                 return;
             }
@@ -300,7 +310,10 @@ class Controller extends BaseController
             }
 
             if ($acceptsGzip && $ctx !== null) {
-                echo deflate_add($ctx, '', ZLIB_FINISH);
+                $final = deflate_add($ctx, '', ZLIB_FINISH);
+                if ($final !== false) {
+                    echo $final;
+                }
             }
 
         }, 200, $headers);
