@@ -1,11 +1,11 @@
-# DLA Data+
+# DLA Datendienst
 
-Der Datendienst DLA Data+ bietet einen offenen Zugang (CC0-Lizenz) zu den Katalogdaten des DLA Marbach. Über die Schnittstelle lassen sich individuelle Abfragen durchführen und die Daten in unterschiedlichen Formaten (JSON, DC, MODS, RIS) exportieren. So können die Daten erforscht und in eigene Forschungsumgebungen eingebunden werden.
+Der Datendienst bietet einen offenen Zugang (CC0-Lizenz) zu den Katalogdaten des DLA Marbach. Über die Schnittstelle lassen sich individuelle Abfragen durchführen und die Daten in unterschiedlichen Formaten (JSON, TSV, DC, MODS, RIS) exportieren. So können die Daten erforscht und in eigene Forschungsumgebungen eingebunden werden.
 
 * Direkt zum Datendienst: https://dataservice.dla-marbach.de
 * Datenmodell: https://github.com/dla-marbach/dla-opac-transform/blob/main/docs/README.md
 * Feldliste: https://github.com/dla-marbach/dla-opac-transform/blob/main/docs/internformat.csv
-* Webseite: https://www.dla-marbach.de/katalog/dla-dataplus/
+* Webseite: https://www.dla-marbach.de/katalog/datendienst/
 
 Die Entwicklung erfolgte exemplarisch am Corpus des Quellenrepertoriums der Exilbibliotheken von Alfred Döblin und Siegfried Kracauer. Das Projekt wurde als [Kooperationsprojekt über Text+](https://text-plus.org/vernetzung/kooperationsprojekte/) als Teil der Nationalen Forschungsdateninfrastruktur (NFDI) gefördert ([Weitere Informationen zum Projekt](https://www.dla-marbach.de/bibliothek/projekte/text-kooperationsprojekt-dla-data/)).
 
@@ -57,10 +57,10 @@ Der Parameter `size=50` liefert nur die ersten 50 Treffer und ist hier bei den m
 [https://dataservice.dla-marbach.de/v1/records? **q=%22Huch,%20Ricarda%22** &size=50](https://dataservice.dla-marbach.de/v1/records?q=%22Huch,%20Ricarda%22&size=50)
 
 * Filter (`%20AND%20`):<br>
-[https://dataservice.dla-marbach.de/v1/records? **q=filterLocation_mv:Marbach%20AND%20filterType:Audio** &size=50](https://dataservice.dla-marbach.de/v1/records?q=filterLocation_mv:Marbach%20AND%20filterType:Audio&size=50)
+[https://dataservice.dla-marbach.de/v1/records? **q=filterLocation_mv:Marbach%20AND%20filterType_mv:Audio** &size=50](https://dataservice.dla-marbach.de/v1/records?q=filterLocation_mv:Marbach%20AND%20filterType_mv:Audio&size=50)
 
 * Ausschluss (`%20NOT%20`):<br>
-[https://dataservice.dla-marbach.de/v1/records? **q=filterLocation_mv:Marbach%20NOT%20filterType:Audio** &size=50](https://dataservice.dla-marbach.de/v1/records?q=filterLocation_mv:Marbach%20NOT%20filterType:Audio&size=50)
+[https://dataservice.dla-marbach.de/v1/records? **q=filterLocation_mv:Marbach%20NOT%20filterType_mv:Audio** &size=50](https://dataservice.dla-marbach.de/v1/records?q=filterLocation_mv:Marbach%20NOT%20filterType_mv:Audio&size=50)
 
 ### Filtern wie im Katalog
 
@@ -68,7 +68,7 @@ Der Parameter `size=50` liefert nur die ersten 50 Treffer und ist hier bei den m
 [https://dataservice.dla-marbach.de/v1/records? **q=filterDigital:true** &size=50](https://dataservice.dla-marbach.de/v1/records?q=filterDigital:true&size=50)
 
 * Medientyp (`Gedrucktes, Handschriften, Normdaten, Audio, Bilder und Objekte, Video`):<br>
-[https://dataservice.dla-marbach.de/v1/records? **q=filterType:Audio** &size=50](https://dataservice.dla-marbach.de/v1/records?q=filterType:Audio&size=50)
+[https://dataservice.dla-marbach.de/v1/records? **q=filterType_mv:Audio** &size=50](https://dataservice.dla-marbach.de/v1/records?q=filterType_mv:Audio&size=50)
 
 * Form und Inhalt (z.B. `Brief, Aufsatz, Prosa`):<br>
 [https://dataservice.dla-marbach.de/v1/records? **q=filterFormContent_mv:Prosa** &size=50](https://dataservice.dla-marbach.de/v1/records?q=filterFormContent_mv:Prosa&size=50)

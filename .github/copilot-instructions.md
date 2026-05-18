@@ -1,4 +1,4 @@
-# DLA Data+ Copilot Guide
+# DLA Datendienst Copilot Guide
 ## Architecture
 - Laravel 8 app in `app/Http/Controllers` exposes every public endpoint in `routes/web.php` (all prefixed with `/v1`); extend the API by adding controller methods there rather than scattering Solr calls elsewhere.
 - Solr access is centralized through Guzzle clients configured in `config/dla_solr.php`; always reuse those settings.

@@ -20,7 +20,7 @@ class OverrideOpenApiJsonController extends OpenApiJsonController
         $select = '/select';
         $flArray = explode(', ', $jsonResponse->config->requestHandler->{$select}->defaults->fl);
 
-        $json['components']['parameters']['fields']['schema']['items']['enum'] = $flArray;
+        $json['components']['parameters']['fields']['examples']['all']['value'] = $flArray;
 
         if (! config('swagger-ui.modify_file')) {
             return $json;

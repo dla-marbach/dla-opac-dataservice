@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>DLA Data+ API</title>
+    <title>DLA Datendienst</title>
 
     <!--<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@latest/swagger-ui.css">-->
     <link href="{{ asset('css/swagger-ui.css') }}" rel="stylesheet">
@@ -35,6 +35,7 @@
             url: '{{ route('swagger-openapi-json', [], false) }}',
             dom_id: '#swagger-ui',
             deepLinking: true,
+            tryItOutEnabled: true,
             presets: [
                 SwaggerUIBundle.presets.apis,
             ],
