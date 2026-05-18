@@ -335,10 +335,6 @@
                     "not": {
                         "summary": "Ausschluss",
                         "value": "(Friedrich Schiller) NOT Goethe"
-                    },
-                    "join": {
-                        "summary": "Urheberinnen von Publikationen des Verlags Cotta",
-                        "value": "id:PE* AND gender:weiblich AND {!join from=creator_id_mv to=id}publisher_display_mv:Cotta"
                     }
                 }
             },
