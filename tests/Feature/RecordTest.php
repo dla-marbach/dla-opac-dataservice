@@ -38,6 +38,9 @@ class RecordTest extends TestCase
 
     public function test_record_endpoint_with_invalid_id_returns_404(): void
     {
+        $mockClient = Mockery::mock('overload:GuzzleHttp\Client');
+        $mockClient->shouldNotReceive('request');
+
         $response = $this->getJson('/api/v1/record/invalid-id');
 
         $response->assertStatus(404);
