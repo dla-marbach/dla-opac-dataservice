@@ -11,7 +11,7 @@ use Tests\TestCase;
  */
 class RecordTest extends TestCase
 {
-    public function test_record_endpoint_with_valid_id_returns_200_or_204(): void
+    public function test_record_endpoint_with_valid_id_returns_200_with_mocked_document(): void
     {
         $mockClient = Mockery::mock('overload:GuzzleHttp\Client');
         $mockClient->shouldReceive('request')
@@ -33,7 +33,7 @@ class RecordTest extends TestCase
 
         $response = $this->getJson('/api/v1/record/DLA0001234?fields=title');
 
-        $this->assertContains($response->status(), [200, 204]);
+        $response->assertStatus(200);
     }
 
     public function test_record_endpoint_with_invalid_id_returns_404(): void

@@ -11,31 +11,31 @@ use Tests\TestCase;
  */
 class RecordsTest extends TestCase
 {
-    public function test_records_endpoint_with_q_parameter_returns_200_or_204(): void
+    public function test_records_endpoint_with_q_parameter_returns_200_with_mocked_document(): void
     {
         $this->mockRecordsRequestResponses();
 
         $response = $this->getJson('/api/v1/records?q=*:*&fields=title');
 
-        $this->assertContains($response->status(), [200, 204]);
+        $response->assertStatus(200);
     }
 
-    public function test_records_endpoint_with_size_parameter_returns_200_or_204(): void
+    public function test_records_endpoint_with_size_parameter_returns_200_with_mocked_document(): void
     {
         $this->mockRecordsRequestResponses();
 
         $response = $this->getJson('/api/v1/records?size=5&fields=title');
 
-        $this->assertContains($response->status(), [200, 204]);
+        $response->assertStatus(200);
     }
 
-    public function test_records_endpoint_with_format_json_parameter_returns_200_or_204(): void
+    public function test_records_endpoint_with_format_json_parameter_returns_200_with_mocked_document(): void
     {
         $this->mockRecordsRequestResponses();
 
         $response = $this->getJson('/api/v1/records?format=json&q=*:*&fields=title');
 
-        $this->assertContains($response->status(), [200, 204]);
+        $response->assertStatus(200);
     }
 
     private function mockRecordsRequestResponses(): void
