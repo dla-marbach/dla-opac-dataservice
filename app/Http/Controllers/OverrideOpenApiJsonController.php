@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use GuzzleHttp\Client as Client;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Str;
+use App\Support\SolrClientFactory;
 use NextApps\SwaggerUi\Http\Controllers\OpenApiJsonController;
-use RuntimeException;
 
 class OverrideOpenApiJsonController extends OpenApiJsonController
 {
     protected function configureServer(array $json) : array
     {
         // get field information dynamically
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/' . 'config/']);
-        $response = $client->request('GET', 'requestHandler', ['componentName' => '/select']);
+        $client = app(SolrClientFactory::class)->coreClient('config/');
+        $response = $client->request('GET', 'requestHandler', ['query' => ['componentName' => '/select']]);
         $responseBody = $response->getBody();
         $jsonResponse = json_decode($responseBody->getContents());
         $select = '/select';

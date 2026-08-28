@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SolrClientFactory;
 use GuzzleHttp\Client as Client;
 use JsonMachine\Items;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -16,6 +17,19 @@ class Controller extends BaseController
 
 
     private static ?string $cachedDefaultFieldList = null;
+
+    protected function solrClients(): SolrClientFactory
+    {
+        return app(SolrClientFactory::class);
+    }
+
+    /**
+     * Reset the process wide field list cache (used by tests).
+     */
+    public static function resetDefaultFieldListCache(): void
+    {
+        self::$cachedDefaultFieldList = null;
+    }
 
     private function getRepeatedQueryParameter(Request $request, string $parameterName): array
     {
@@ -100,8 +114,8 @@ class Controller extends BaseController
     private function getDefaultFieldList(): string
     {
         if (self::$cachedDefaultFieldList === null) {
-            $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/config/']);
-            $response = $client->request('GET', 'requestHandler', ['componentName' => '/select']);
+            $client = $this->solrClients()->coreClient('config/');
+            $response = $client->request('GET', 'requestHandler', ['query' => ['componentName' => '/select']]);
             $jsonResponse = json_decode($response->getBody()->getContents());
             $select = '/select';
             self::$cachedDefaultFieldList = $jsonResponse->config->requestHandler->{$select}->defaults->fl;
@@ -157,7 +171,7 @@ class Controller extends BaseController
         $core = config('dla_solr.core');
 
         // count documents
-        $countClient = new Client(['base_uri' => config('dla_solr.base_uri') . $core . '/select']);
+        $countClient = $this->solrClients()->selectClient();
         $countParams['query']['q'] = '*:*';
         $countParams['query']['rows'] = 0;
         $countResponse = $countClient->request('GET', 'select', $countParams);
@@ -165,8 +179,8 @@ class Controller extends BaseController
         $docCount = $countJson->response->numFound ?? 0;
 
         // get lastModified from admin endpoint
-        $adminClient = new Client(['base_uri' => config('dla_solr.base_uri') . 'admin/']);
-        $adminResponse = $adminClient->request('GET', 'cores', ['action' => 'STATUS']);
+        $adminClient = $this->solrClients()->adminClient();
+        $adminResponse = $adminClient->request('GET', 'cores', ['query' => ['action' => 'STATUS']]);
         $adminJson = json_decode($adminResponse->getBody()->getContents());
 
         $lastModify = 0;
@@ -190,7 +204,7 @@ class Controller extends BaseController
     public function getInfoSchema()
     {
         // count documents
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/' . 'schema/']);
+        $client = $this->solrClients()->coreClient('schema/');
         $solrQueryParams['query']['wt'] = 'json';
 
         $response = $client->request('GET', 'fields', $solrQueryParams);
@@ -412,7 +426,7 @@ class Controller extends BaseController
         $solrQueryParams = [];
         $solrQueryParams = $this->transformGivenParameter($request);
 
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
+        $client = $this->solrClients()->selectClient();
         $solrQueryParams['query']['q'] = 'id:' . $id;
 
         return $this->formattingResponse($solrQueryParams, $format, $client);
@@ -423,7 +437,7 @@ class Controller extends BaseController
     {
         $solrQueryParams = [];
         $solrQueryParams = $this->transformGivenParameter($request);
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
+        $client = $this->solrClients()->selectClient();
 
         if ($request->input('format')) {
             $format = $request->input('format');
@@ -463,7 +477,7 @@ class Controller extends BaseController
         $solrQueryParams = [];
         $solrQueryParams = $this->transformGivenParameter($request);
 
-        $client = new Client(['base_uri' => config('dla_solr.base_uri') . config('dla_solr.core') . '/select']);
+        $client = $this->solrClients()->selectClient();
 
         if ($request->input('format')) {
             $format = $request->input('format');
