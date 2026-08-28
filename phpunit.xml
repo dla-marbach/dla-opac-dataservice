@@ -19,6 +19,8 @@
     </coverage>
     <php>
         <server name="APP_ENV" value="testing"/>
+        <!-- Fixed dummy key so the test suite runs without a local .env file. -->
+        <server name="APP_KEY" value="base64:ZGxhLWRhdGFzZXJ2aWNlLXRlc3Rpbmcta2V5LTEyMzQ="/>
         <server name="DLA_SOLR_BASE_URI" value="http://solr.test/"/>
         <server name="DLA_SOLR_BASE_CORE" value="testcore"/>
         <server name="CACHE_DRIVER" value="array"/>
