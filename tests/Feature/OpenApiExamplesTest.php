@@ -42,7 +42,7 @@ class OpenApiExamplesTest extends TestCase
         $values = [];
         foreach ($examples as $name => $example) {
             $value = $example['value'] ?? null;
-            if ($value === null || $value === '' || $value === [''] || $value === ['']) {
+            if ($value === null || $value === '' || $value === [] || $value === ['']) {
                 continue;
             }
             $values[$name] = $value;
