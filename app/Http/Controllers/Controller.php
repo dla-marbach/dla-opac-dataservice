@@ -5,17 +5,11 @@ namespace App\Http\Controllers;
 use App\Support\SolrClientFactory;
 use GuzzleHttp\Client as Client;
 use JsonMachine\Items;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
-
-
     private static ?string $cachedDefaultFieldList = null;
 
     protected function solrClients(): SolrClientFactory

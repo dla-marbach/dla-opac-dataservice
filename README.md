@@ -146,3 +146,18 @@ Solr mit Beispieldaten installieren und starten:
 bash solr-install.sh
 bash solr-start.sh
 ```
+
+## Tests
+
+Die Testsuite kommt ohne laufenden Solr-Index aus: Die HTTP-Aufrufe an Solr werden über die
+Klasse `App\Support\SolrClientFactory` erzeugt und in den Tests durch vorbereitete Antworten
+ersetzt. Neben den einzelnen Endpunkten und Ausgabeformaten werden auch die in
+`resources/swagger/openapi.json` dokumentierten Beispiele (Suchanfragen, Filter, Sortierung,
+Felder, Formate) geprüft.
+
+```
+vendor/bin/phpunit
+```
+
+Die Swagger-UI-Assets liegen fertig gebaut unter `public/css/swagger-ui.css` und
+`public/js/swagger-ui-bundle.js` und werden ohne Build-Schritt ausgeliefert.
