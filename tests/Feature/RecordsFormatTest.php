@@ -28,6 +28,11 @@ class RecordsFormatTest extends TestCase
         $this->assertSame('json', $solr->queryParameters(2)['wt']);
     }
 
+    /**
+     * Documents the current behaviour: CSV downloads are streamed unchanged but
+     * are still labelled with the default JSON content type (known deviation,
+     * kept unchanged here so the API behaviour stays stable).
+     */
     public function test_csv_is_streamed_unchanged_from_solr(): void
     {
         $solr = $this->fakeSolr();
