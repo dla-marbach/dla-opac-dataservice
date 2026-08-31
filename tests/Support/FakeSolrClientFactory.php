@@ -112,7 +112,15 @@ class FakeSolrClientFactory extends SolrClientFactory
     {
         $parameters = [];
 
-        foreach (explode('&', (string) parse_url($this->requestUri($index), PHP_URL_QUERY)) as $pair) {
+        $request = $this->transactions[$index]['request'] ?? null;
+        $queryString = (string) parse_url($this->requestUri($index), PHP_URL_QUERY);
+
+        // select requests are sent as POST body to avoid URI length limits
+        if ($queryString === '' && $request !== null && $request->getMethod() === 'POST') {
+            $queryString = (string) $request->getBody();
+        }
+
+        foreach (explode('&', $queryString) as $pair) {
             if ($pair === '') {
                 continue;
             }

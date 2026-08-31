@@ -98,11 +98,14 @@ class Controller extends BaseController
 
     private function requestSolrSelect(Client $client, array $solrQueryParams)
     {
+        // POST avoids "414 URI Too Long" errors caused by large `fl`/`fq` parameters
         if (isset($solrQueryParams['query']) && is_array($solrQueryParams['query'])) {
-            $solrQueryParams['query'] = $this->buildSolrQueryString($solrQueryParams['query']);
+            $solrQueryParams['body'] = $this->buildSolrQueryString($solrQueryParams['query']);
+            $solrQueryParams['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
+            unset($solrQueryParams['query']);
         }
 
-        return $client->request('GET', 'select', $solrQueryParams);
+        return $client->request('POST', 'select', $solrQueryParams);
     }
 
     private function getDefaultFieldList(): string
