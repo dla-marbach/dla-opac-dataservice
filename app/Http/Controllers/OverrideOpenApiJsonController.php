@@ -24,7 +24,7 @@ class OverrideOpenApiJsonController extends OpenApiJsonController
         }
 
         $json['servers'] = [
-            ['url' => config('app.url')],
+            ['url' => rtrim(config('app.url'), '/') . '/v1'],
         ];
 
         return $json;

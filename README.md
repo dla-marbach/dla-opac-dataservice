@@ -147,6 +147,22 @@ bash solr-install.sh
 bash solr-start.sh
 ```
 
+### Manuelles Testen über Swagger UI
+
+Die Swagger UI unter `http://127.0.0.1:8000` verwendet standardmäßig die in
+`resources/swagger/openapi.json` hinterlegte Produktiv-URL. Um stattdessen gegen die lokale
+Laravel-Instanz zu testen, ohne diese Datei zu verändern:
+
+1. In `.env` `APP_URL=http://127.0.0.1:8000` setzen (ohne `/v1`-Suffix).
+2. In `config/swagger-ui.php` `'modify_file' => true` setzen.
+3. `php artisan serve` (neu) starten und `http://127.0.0.1:8000` im Browser öffnen.
+
+Mit `modify_file => true` ersetzt `App\Http\Controllers\OverrideOpenApiJsonController` die
+`servers`-URL zur Laufzeit durch `APP_URL` inkl. `/v1`-Prefix. Wichtig ist, dass die Swagger UI
+über denselben Host aufgerufen wird, der in `APP_URL` steht (`127.0.0.1` und `localhost` gelten
+als unterschiedliche Origins und führen sonst zu CORS-Fehlern, da die App keine
+CORS-Middleware konfiguriert).
+
 ## Tests
 
 Die Testsuite kommt ohne laufenden Solr-Index aus: Die HTTP-Aufrufe an Solr werden über die
