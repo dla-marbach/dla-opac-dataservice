@@ -195,7 +195,10 @@ ableitet.
 Vorgehen bei einem neuen Release:
 
 1. Sicherstellen, dass `main` alle gewünschten Änderungen enthält und die Tests grün sind.
-2. `info.version` in `resources/swagger/openapi.json` auf die neue Version setzen.
+2. `info.version` in `resources/swagger/openapi.json` auf die neue Version setzen – auch wenn
+   sich an den dokumentierten Endpunkten inhaltlich nichts geändert hat (z.B. bei reinem
+   Refactoring oder Testsuite-Ausbau). Die Versionsnummer folgt so immer dem Release-Tag statt
+   eigenständig zu laufen, was sonst zu Verwirrung führt.
 3. Tag erstellen und pushen: `git tag v1.2.0 && git push origin v1.2.0`.
 4. Auf GitHub ein Release zum Tag anlegen (Release-Notes lassen sich automatisch aus den
    PR-Titeln generieren).
