@@ -205,7 +205,7 @@ Vorgehen bei einem neuen Release:
 
 ## Deployment
 
-Voraussetzungen auf dem Zielserver: PHP >= 7.3 (empfohlen 8.1) mit den von Laravel 8 benötigten
+Voraussetzungen auf dem Zielserver: PHP >= 7.3 (empfohlen 8.3) mit den von Laravel 8 benötigten
 Extensions, Composer sowie ein Webserver (Apache/nginx), dessen Document Root auf `public/`
 zeigt. Ein separater Solr-Index (Version wie unter `solr/`) muss erreichbar sein; eine
 Datenbank wird nicht benötigt.
