@@ -81,6 +81,122 @@
                 ]
             }
         },
+        "/records/facets": {
+            "get": {
+                "description": "Liefert für die angegebenen Felder die Häufigkeit der einzelnen Feldwerte (Facetten) in den Datensätzen, auf die die gegebenen Suchkriterien zutreffen.\n\nIn Kombination mit einer [Solr Join Query](https://github.com/dla-marbach/dla-opac-dataservice#solr-join-query) im Parameter `fq` lassen sich so z.B. Personen nach Geschlecht auszählen, die als Bestandsbildner in Beständen (BF) verknüpft sind.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/query"
+                    },
+                    {
+                        "$ref": "#/components/parameters/fq"
+                    },
+                    {
+                        "name": "facet",
+                        "in": "query",
+                        "description": "Kommagetrennte Liste der Felder, deren Werte gezählt werden sollen. Siehe: [Tabelle mit verfügbaren Feldern](https://github.com/dla-marbach/dla-opac-transform/blob/main/docs/internformat.csv).",
+                        "required": true,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": ["category", "categorySub"]
+                    },
+                    {
+                        "name": "facetLimit",
+                        "in": "query",
+                        "description": "Maximale Anzahl von Werten je Feld (1 bis 10000).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 10000,
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "facetOffset",
+                        "in": "query",
+                        "description": "Anzahl der zu überspringenden Werte je Feld (für Paginierung in Kombination mit `facetLimit`).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "facetMinCount",
+                        "in": "query",
+                        "description": "Nur Werte ausgeben, die mindestens so häufig vorkommen.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "facetSort",
+                        "in": "query",
+                        "description": "Sortierung der Werte: `count` (nach Häufigkeit absteigend) oder `index` (alphabetisch).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": ["count", "index"],
+                            "default": "count"
+                        }
+                    },
+                    {
+                        "name": "facetPrefix",
+                        "in": "query",
+                        "description": "Nur Werte ausgeben, die mit dieser Zeichenkette beginnen.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "facetMissing",
+                        "in": "query",
+                        "description": "Zusätzlich die Anzahl der Datensätze ohne Wert im Feld ausgeben (als Eintrag mit `value: null`).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "documentCount": 4352,
+                                    "facets": {
+                                        "category": [
+                                            {"value": "Bestand", "count": 1369},
+                                            {"value": "Depositum in der A-Reihe", "count": 101}
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Ungültige Parameter"
+                    }
+                },
+                "tags": [
+                    "Record"
+                ]
+            }
+        },
         "/record/{id}.{format}": {
             "get": {
                 "description": "Liefert den Datensatz {id} im Format {format}.",

@@ -15,6 +15,9 @@ Beispiele für komplexe Fragestellungen an die Katalogdaten des DLA, gelöst mit
 * Wie hoch ist der Anteil an publizierenden Frauen bei den Verlagen Cotta, Insel und Rotbuch?
   * Komplexe Lösung mit lokaler Filterung: [examples/gender-verlage.ipynb](examples/gender-verlage.ipynb)
   * Vereinfachte Lösung mit Solr Join Query: [examples/gender-verlage-simple.ipynb](examples/gender-verlage-simple.ipynb)
+* Wie hoch ist der Anteil weiblicher Bestandsbildnerinnen bei Vor- und Nachlässen, Autorenbibliotheken und Sammlungen?
+  * Marimo-Notebook (läuft auch im Browser per WebAssembly): [examples/gender-bestandsbildner.py](examples/gender-bestandsbildner.py)
+  * Lokal starten mit `uvx marimo edit examples/gender-bestandsbildner.py` oder im Browser über [marimo.app](https://marimo.app) öffnen. Ein anderer Datendienst lässt sich per `?api=<URL>` bzw. `-- --api <URL>` angeben.
 * Wie ist die Verteilung von Primär- und Sekundärliteratur bei einzelnen Autorinnen und Autoren über die Jahre?
 * Wie ist die Verteilung von Übersetzungen (sprachlich wie zeitlich)?
 
@@ -44,6 +47,9 @@ Der Parameter `size=50` liefert nur die ersten 50 Treffer und ist hier bei den m
 
 * Anzahl der Datensätze:<br>
 [https://dataservice.dla-marbach.de/v1/ **records/count?** q=Marbach](https://dataservice.dla-marbach.de/v1/records/count?q=Marbach)
+
+* Facetten (Häufigkeit der Feldwerte, Optionen `facetLimit`, `facetOffset`, `facetMinCount`, `facetSort`, `facetPrefix`, `facetMissing`):<br>
+[https://dataservice.dla-marbach.de/v1/ **records/facets?** q=id:BF* **&facet=category,categorySub**](https://dataservice.dla-marbach.de/v1/records/facets?q=id:BF*&facet=category,categorySub)
 
 ### Suchoperatoren
 
@@ -120,6 +126,9 @@ Der Parameter `size=50` liefert nur die ersten 50 Treffer und ist hier bei den m
 * Personen mit Geschlechtsangabe "weiblich", die Urheber von Publikationen des Verlags Cotta sind:
   * Count: https://dataservice.dla-marbach.de/v1/records/count?q=id:PE*%20AND%20gender:weiblich%20&fq={!join%20from=creator_id_mv%20to=id}publisher_display_mv:Cotta
   * Datensätze: https://dataservice.dla-marbach.de/v1/records?q=id:PE*%20AND%20gender:weiblich%20&fq={!join%20from=creator_id_mv%20to=id}publisher_display_mv:Cotta
+* Personen je Geschlecht, die als Bestandsbildner eines Hauptbestands (ohne `parent_id_mv`) verknüpft sind (jede Person einmal gezählt):
+  * Facetten: https://dataservice.dla-marbach.de/v1/records/facets?q=id:PE*&fq={!join%20from=personAt_id_mv%20to=id}id:BF*%20AND%20-parent_id_mv:*%20AND%20-confidential:true&facet=gender&facetMissing=true
+  * Hinweis: Innerhalb der Join Query wird der Ausschluss vertraulicher Datensätze nicht automatisch angewendet, daher `-confidential:true` ergänzen. Das Feld `category` ist tokenisiert (`category:Bestand` findet auch „Aufgelöster Bestand der Bibliothek“); für exakte Filter nach Bestandstyp siehe das Notebook [examples/gender-bestandsbildner.py](examples/gender-bestandsbildner.py).
 
 ## Technik
 

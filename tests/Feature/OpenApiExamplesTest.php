@@ -58,6 +58,7 @@ class OpenApiExamplesTest extends TestCase
         $this->assertSame([
             '/records',
             '/records/count',
+            '/records/facets',
             '/record/{id}.{format}',
             '/collections',
             '/collection/{id}.{format}',

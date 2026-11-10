@@ -10,6 +10,9 @@ use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
+    private const FACET_LIMIT_DEFAULT = 100;
+    private const FACET_LIMIT_MAX = 10000;
+
     private static ?string $cachedDefaultFieldList = null;
 
     protected function solrClients(): SolrClientFactory
@@ -466,6 +469,97 @@ class Controller extends BaseController
         return response(
             json_encode(['documentCount' => $jsonResponse->response->numFound], JSON_UNESCAPED_UNICODE)
         )->header('content-type', 'application/json; charset=utf-8')
+            ->header('Access-Control-Allow-Origin', '*');
+    }
+
+    public function getRecordsFacets(Request $request)
+    {
+        $solrQueryParams = $this->transformGivenParameter($request);
+        unset($solrQueryParams['query']['sort'], $solrQueryParams['query']['start'], $solrQueryParams['query']['fl']);
+
+        $facetFields = array_values(array_unique(array_filter(array_map(
+            'trim',
+            explode(',', (string) $request->input('facet', ''))
+        ), fn($field) => $field !== '')));
+
+        if (empty($facetFields)) {
+            return $this->facetErrorResponse('Parameter "facet" ist erforderlich (kommagetrennte Liste von Feldnamen).');
+        }
+
+        foreach ($facetFields as $field) {
+            if (!preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $field) || substr($field, 0, 6) === 'export') {
+                return $this->facetErrorResponse('Ungültiger Feldname im Parameter "facet": ' . $field);
+            }
+        }
+
+        $limit = $request->input('facetLimit', self::FACET_LIMIT_DEFAULT);
+        if (!is_numeric($limit) || (int) $limit < 1 || (int) $limit > self::FACET_LIMIT_MAX) {
+            return $this->facetErrorResponse('Parameter "facetLimit" muss eine Zahl zwischen 1 und ' . self::FACET_LIMIT_MAX . ' sein.');
+        }
+
+        $offset = $request->input('facetOffset', 0);
+        if (!is_numeric($offset) || (int) $offset < 0) {
+            return $this->facetErrorResponse('Parameter "facetOffset" muss eine Zahl größer oder gleich 0 sein.');
+        }
+
+        $minCount = $request->input('facetMinCount', 1);
+        if (!is_numeric($minCount) || (int) $minCount < 0) {
+            return $this->facetErrorResponse('Parameter "facetMinCount" muss eine Zahl größer oder gleich 0 sein.');
+        }
+
+        $sort = $request->input('facetSort', 'count');
+        if (!in_array($sort, ['count', 'index'], true)) {
+            return $this->facetErrorResponse('Parameter "facetSort" muss "count" oder "index" sein.');
+        }
+
+        $missing = filter_var($request->input('facetMissing', 'false'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($missing === null) {
+            return $this->facetErrorResponse('Parameter "facetMissing" muss "true" oder "false" sein.');
+        }
+
+        if (empty($solrQueryParams['query']['q'])) {
+            $solrQueryParams['query']['q'] = '*:*';
+        }
+
+        $solrQueryParams['query']['rows'] = 0;
+        $solrQueryParams['query']['wt'] = 'json';
+        $solrQueryParams['query']['facet'] = 'true';
+        $solrQueryParams['query']['facet.field'] = $facetFields;
+        $solrQueryParams['query']['facet.limit'] = (int) $limit;
+        $solrQueryParams['query']['facet.offset'] = (int) $offset;
+        $solrQueryParams['query']['facet.mincount'] = (int) $minCount;
+        $solrQueryParams['query']['facet.sort'] = $sort;
+        $solrQueryParams['query']['facet.missing'] = $missing ? 'true' : 'false';
+        if ($request->filled('facetPrefix')) {
+            $solrQueryParams['query']['facet.prefix'] = (string) $request->input('facetPrefix');
+        }
+        $solrQueryParams['query']['json.nl'] = 'arrarr';
+
+        $client = $this->solrClients()->selectClient();
+        $response = $this->requestSolrSelect($client, $solrQueryParams);
+        $jsonResponse = json_decode($response->getBody()->getContents(), true);
+
+        $facets = [];
+        foreach ($facetFields as $field) {
+            $facets[$field] = [];
+            foreach ($jsonResponse['facet_counts']['facet_fields'][$field] ?? [] as $pair) {
+                $facets[$field][] = ['value' => $pair[0], 'count' => (int) $pair[1]];
+            }
+        }
+
+        return response(
+            json_encode([
+                'documentCount' => $jsonResponse['response']['numFound'] ?? 0,
+                'facets' => $facets,
+            ], JSON_UNESCAPED_UNICODE)
+        )->header('content-type', 'application/json; charset=utf-8')
+            ->header('Access-Control-Allow-Origin', '*');
+    }
+
+    private function facetErrorResponse(string $message)
+    {
+        return response(json_encode(['error' => $message], JSON_UNESCAPED_UNICODE), 400)
+            ->header('content-type', 'application/json; charset=utf-8')
             ->header('Access-Control-Allow-Origin', '*');
     }
 
