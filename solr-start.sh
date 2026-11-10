@@ -1,6 +1,9 @@
 #!/bin/bash
 # Start
-export SOLR_JETTY_HOST="0.0.0.0"
+# Solr läuft ohne Authentifizierung, deshalb standardmäßig nur auf localhost.
+# Die Portweiterleitung im Devcontainer und in Codespaces funktioniert damit.
+# Andere Adresse nur ausdrücklich, z. B. SOLR_JETTY_HOST=0.0.0.0 bash solr-start.sh
+export SOLR_JETTY_HOST="${SOLR_JETTY_HOST:-127.0.0.1}"
 solr/bin/solr start --user-managed || true
 solr/docker/scripts/wait-for-solr.sh
 # Beispieldaten aus dla-opac-transform repo laden
