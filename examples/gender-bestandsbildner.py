@@ -84,7 +84,7 @@ def _(api_base, build_url):
         "records",
         {
             "q": "id:PE*",
-            "fq": "{!join from=personAt_id_mv to=id}id:BF* AND -confidential:true",
+            "fq": "{!join from=personAt_id_mv to=id}id:BF*",
             "fields": "id,display,gender",
         },
     )
@@ -400,7 +400,7 @@ def _(mo, url_bf, url_pe):
 
     Eine schnelle Gegenprobe ohne Notebook liefert der Endpunkt `/v1/records/facets`, z.B. die Anzahl
     der Personen je Geschlecht, die als Bestandsbildner eines Hauptbestands verknüpft sind:
-    `/v1/records/facets?q=id:PE*&fq={{!join from=personAt_id_mv to=id}}id:BF* AND -parent_id_mv:* AND -confidential:true&facet=gender&facetMissing=true`
+    `/v1/records/facets?q=id:PE*&fq={{!join from=personAt_id_mv to=id}}id:BF* AND -parent_id_mv:*&facet=gender&facetMissing=true`
     """)
     return
 
