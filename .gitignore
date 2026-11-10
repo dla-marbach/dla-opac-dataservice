@@ -1,4 +1,6 @@
 /vendor/
+# Swagger-UI-Assets, kopiert aus vendor/ beim composer install
+/public/vendor/
 node_modules/
 npm-debug.log
 yarn-error.log
@@ -17,6 +19,8 @@ public_html/hot
 
 storage/*.key
 .env
+.env.*
+!.env.example
 Homestead.yaml
 Homestead.json
 /.vagrant

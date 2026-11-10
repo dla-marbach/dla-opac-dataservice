@@ -1,0 +1,8 @@
+# Ausnahmen für Sicherheitsfunde: nur von Menschen, mit Ticket, Begründung und Ablaufdatum.
+
+# Ticket TODO: laravel/framework 8.x ohne Support, Upgrade auf unterstütztes Laravel geplant.
+# TokenGuard authentication bypass: Die App hat keine Authentifizierung und nutzt keinen TokenGuard.
+CVE-2026-114509 exp:2026-12-31
+
+# Ticket TODO: CRLF injection in der Validierungsregel "email": Die App nutzt diese Regel nicht.
+GHSA-5vg9-5847-vvmq exp:2026-12-31

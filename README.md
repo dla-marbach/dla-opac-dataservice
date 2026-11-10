@@ -127,16 +127,18 @@ Der Datendienst basiert auf einem separaten Solr-Index, der mit den Daten des DL
 
 Implementiert wurde eine offene API auf Basis der [OpenAPI](https://swagger.io/specification/) Spezifikation. Mit dem Tool [Swagger UI](https://swagger.io/tools/swagger-ui/) werden die Suchparameter öffentlich dokumentiert, mit einer Möglichkeit, diese an Beispielen interaktiv auszuprobieren.
 
-Die Schnittstellen-Endpunkte werden dabei über das auf PHP basierende Framework [Laravel](https://laravel.com/) bereitgestellt und ermöglichen die Manipulation der Solr-Ausgabe, um die entsprechenden Ausgabeformate bereitstellen zu können. Die Swagger-UI-Assets liegen fertig gebaut unter
-`public/css/swagger-ui.css` und `public/js/swagger-ui-bundle.js` und werden ohne Build-Schritt
-ausgeliefert.
+Die Schnittstellen-Endpunkte werden dabei über das auf PHP basierende Framework [Laravel](https://laravel.com/) bereitgestellt und ermöglichen die Manipulation der Solr-Ausgabe, um die entsprechenden Ausgabeformate bereitstellen zu können. Die Swagger-UI-Assets kommen aus dem Composer-Paket
+`swagger-api/swagger-ui` und werden bei `composer install` nach `public/vendor/swagger-ui/`
+kopiert; einen JS/CSS-Build-Schritt gibt es nicht.
 
 ## Entwicklungsumgebung
 
 ### mit GitHub Codespaces / Devcontainer
 
-Der Devcontainer (`.devcontainer/devcontainer.json`) führt die Installation automatisch aus.
-Die App ist direkt unter dem weitergeleiteten Port http://127.0.0.1:8000 erreichbar.
+Der Devcontainer (`.devcontainer/`) bringt PHP 8.3, Composer und Java für Solr mit und führt
+die Installation automatisch aus. Er läuft in GitHub Codespaces und lokal (VS Code + Podman,
+„Reopen in Container“). Die App ist direkt unter dem weitergeleiteten Port
+http://127.0.0.1:8000 erreichbar.
 
 ### manuell
 
@@ -185,77 +187,12 @@ Felder, Formate) geprüft.
 vendor/bin/phpunit
 ```
 
-## Releases
+## Releases und Deployment
 
-Versionierung erfolgt über Git-Tags nach [SemVer](https://semver.org/lang/de/) mit `v`-Prefix
-(z.B. `v1.2.0`), veröffentlicht als [GitHub Release](https://github.com/dla-marbach/dla-opac-dataservice/releases).
-`composer.json` enthält bewusst kein `version`-Feld, da Composer die Version aus dem Git-Tag
-ableitet.
+Versioniert wird nach [SemVer](https://semver.org/lang/de/) mit `v`-Prefix (z.B. `v1.2.0`),
+veröffentlicht als [GitHub Release](https://github.com/dla-marbach/dla-opac-dataservice/releases).
+Produktiv läuft immer ein Release-Tag, nie `main`.
 
-Vorgehen bei einem neuen Release:
-
-1. Sicherstellen, dass `main` alle gewünschten Änderungen enthält und die Tests grün sind.
-2. `info.version` in `resources/swagger/openapi.json` auf die neue Version setzen – auch wenn
-   sich an den dokumentierten Endpunkten inhaltlich nichts geändert hat (z.B. bei reinem
-   Refactoring oder Testsuite-Ausbau). Die Versionsnummer folgt so immer dem Release-Tag statt
-   eigenständig zu laufen, was sonst zu Verwirrung führt.
-3. Tag erstellen und pushen: `git tag v1.2.0 && git push origin v1.2.0`.
-4. Auf GitHub ein Release zum Tag anlegen (Release-Notes lassen sich automatisch aus den
-   PR-Titeln generieren).
-
-## Deployment
-
-Voraussetzungen auf dem Zielserver: PHP >= 7.3 (empfohlen 8.3) mit den von Laravel 8 benötigten
-Extensions, Composer sowie ein Webserver (Apache/nginx), dessen Document Root auf `public/`
-zeigt. Ein separater Solr-Index (Version wie unter `solr/`) muss erreichbar sein; eine
-Datenbank wird nicht benötigt.
-
-### Erstinstallation
-
-```
-git clone https://github.com/dla-marbach/dla-opac-dataservice.git
-cd dla-opac-dataservice
-git checkout v1.2.0
-composer install --no-dev --optimize-autoloader
-cp .env.example .env
-```
-
-Statt `v1.2.0` den [aktuellsten Release-Tag](https://github.com/dla-marbach/dla-opac-dataservice/releases) einsetzen.
-
-In `.env` produktive Werte setzen:
-
-```
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://dataservice.dla-marbach.de
-DLA_SOLR_BASE_URI=<URL des produktiven Solr-Servers, mit abschließendem Slash>
-DLA_SOLR_BASE_CORE=<Name des Solr-Cores>
-```
-
-```
-php artisan key:generate
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-Schreibrechte für den Webserver-Benutzer auf `storage/` und `bootstrap/cache/` sicherstellen.
-
-### Update
-
-Deployments sollten auf einem konkreten Release-Tag laufen statt auf `main`, damit jederzeit
-nachvollziehbar ist, welche Version produktiv läuft, und ein Rollback auf den vorherigen Tag
-möglich ist:
-
-```
-git fetch --tags
-git checkout v1.2.0
-composer install --no-dev --optimize-autoloader
-php artisan config:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-Falls PHP mit OPcache läuft, den PHP-FPM-Prozess bzw. Webserver neu starten, damit der
-aktualisierte Code geladen wird.
+Vorgehen bei Release, Deployment und Rollback sowie der Ablauf bei neuen Features und Fixes
+stehen in der [CONTRIBUTING.md](CONTRIBUTING.md). Regeln für KI-Agenten stehen in der
+[AGENTS.md](AGENTS.md).
