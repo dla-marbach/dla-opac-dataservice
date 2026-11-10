@@ -18,12 +18,15 @@ Regeln für KI-Agenten in diesem Repository. Zweck, Aufbau und Befehle des Proje
 
 ## Abhängigkeiten
 - Updates von Abhängigkeiten, GitHub Actions und Base Images übernimmt Dependabot. Ändere Versionen nur, wenn die Aufgabe es erfordert.
-- Füge neue Abhängigkeiten nur hinzu, wenn die Aufgabe es erfordert. Begründe sie im PR.
+- Füge neue Abhängigkeiten nur hinzu, wenn die Aufgabe es erfordert. Begründe sie im PR und aktualisiere das Lockfile (`composer.lock`).
 - Base Images in `.devcontainer/Dockerfile` immer mit festem Versionstag, nie `latest`.
+- Fremdbibliotheken, auch JavaScript und CSS, nur über den Paketmanager einbinden, nie als kopierte Datei ins Repo.
 
 ## Betrieb
 - Die Anwendung läuft nicht als Container, sondern als Git-Checkout eines Release-Tags mit PHP und Webserver auf dem Server (siehe „Deployment“ in der `CONTRIBUTING.md`). Eine Datenbank gibt es nicht; der Solr-Index wird außerhalb dieses Repos befüllt.
 - Konfiguration ausschließlich über Umgebungsvariablen aus `.env`. Jede neue Variable mit Beispielwert in `.env.example` eintragen.
+- Code und Abhängigkeiten kommen auf dem Server nur aus dem Release-Tag und `composer install` mit `composer.lock`, nie als Kopie oder Änderung von Hand.
+- IP-Adressen nur anonymisiert loggen (IPv4 ohne letztes Oktett, IPv6 nur die ersten 48 Bit).
 - Versionen folgen SemVer mit „v“ (`vX.Y.Z`). Tags und Releases legen nur Menschen an.
 
 ## No-Gos
@@ -46,13 +49,14 @@ Regeln für KI-Agenten in diesem Repository. Zweck, Aufbau und Befehle des Proje
 ### Dokumentation und Swagger
 - Die Swagger-UI-Routen kommen aus `wotz/laravel-swagger-ui`. `SwaggerUiServiceProvider` bindet dessen Controller an `OverrideOpenApiJsonController`, der über Solrs `/config/requestHandler` die `fields`-Enum dynamisch füllt und die `servers`-URL durch `APP_URL` ersetzt.
 - Die Spezifikation liegt in `resources/swagger/openapi.json` (konfiguriert in `config/swagger-ui.php`). `info.version` folgt dem Release-Tag, siehe „Release“ in der `CONTRIBUTING.md`.
-- Angepasste Swagger-Views liegen unter `resources/views/vendor/swagger-ui`, die Assets fertig gebaut unter `public/css/swagger-ui.css` und `public/js/swagger-ui-bundle.js`. Es gibt keinen JS/CSS-Build-Schritt.
+- Angepasste Swagger-Views liegen unter `resources/views/vendor/swagger-ui`. Die Assets kommen aus dem Composer-Paket `swagger-api/swagger-ui`; ein Skript in `composer.json` (`post-autoload-dump`) kopiert sie bei jedem `composer install` nach `public/vendor/swagger-ui/` (nicht versioniert). Es gibt keinen JS/CSS-Build-Schritt.
 
 ### Konfiguration
 - Benötigte Variablen: `DLA_SOLR_BASE_URI` (mit abschließendem Slash), `DLA_SOLR_BASE_CORE` und `APP_URL` (für die Server-Angabe in Swagger).
-- `composer.lock` ist nicht versioniert. Die CI erzeugt sie für den Trivy-Scan selbst.
+- `composer.lock` ist für PHP 8.3 aufgelöst (`config.platform.php` in `composer.json`), passend zu CI, Devcontainer und Server.
 
 ### Entwicklung und Tests
+- Shell-Skripte prüft die CI mit `shellcheck *.sh`.
 - Lokal starten mit `php artisan serve`; die Endpunkte liegen unter `http://127.0.0.1:8000/v1` und fragen den konfigurierten Solr an. `solr-install.sh` und `solr-start.sh` richten einen lokalen Solr mit Beispieldaten ein.
 - Die Testsuite (`vendor/bin/phpunit`) braucht keinen Solr. Feature-Tests gehören nach `tests/Feature` und nutzen den Trait `Tests\Concerns\InteractsWithSolr`, der `SolrClientFactory` durch `Tests\Support\FakeSolrClientFactory` ersetzt (vorbereitete Guzzle-Antworten, aufgezeichnete Anfragen).
 - Die Notebooks in `examples/` fragen die produktive API ab. Sie dienen als Integrationstest, wenn sich Abfragesyntax oder Antwortformate ändern.

@@ -127,9 +127,9 @@ Der Datendienst basiert auf einem separaten Solr-Index, der mit den Daten des DL
 
 Implementiert wurde eine offene API auf Basis der [OpenAPI](https://swagger.io/specification/) Spezifikation. Mit dem Tool [Swagger UI](https://swagger.io/tools/swagger-ui/) werden die Suchparameter öffentlich dokumentiert, mit einer Möglichkeit, diese an Beispielen interaktiv auszuprobieren.
 
-Die Schnittstellen-Endpunkte werden dabei über das auf PHP basierende Framework [Laravel](https://laravel.com/) bereitgestellt und ermöglichen die Manipulation der Solr-Ausgabe, um die entsprechenden Ausgabeformate bereitstellen zu können. Die Swagger-UI-Assets liegen fertig gebaut unter
-`public/css/swagger-ui.css` und `public/js/swagger-ui-bundle.js` und werden ohne Build-Schritt
-ausgeliefert.
+Die Schnittstellen-Endpunkte werden dabei über das auf PHP basierende Framework [Laravel](https://laravel.com/) bereitgestellt und ermöglichen die Manipulation der Solr-Ausgabe, um die entsprechenden Ausgabeformate bereitstellen zu können. Die Swagger-UI-Assets kommen aus dem Composer-Paket
+`swagger-api/swagger-ui` und werden bei `composer install` nach `public/vendor/swagger-ui/`
+kopiert; einen JS/CSS-Build-Schritt gibt es nicht.
 
 ## Entwicklungsumgebung
 

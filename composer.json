@@ -2,13 +2,18 @@
     "name": "dla-marbach/dla-opac-dataservice",
     "type": "project",
     "description": "DLA Marbach Datendienst - offene API fuer die Katalogdaten des Deutschen Literaturarchivs.",
-    "keywords": ["api", "solr", "laravel"],
+    "keywords": [
+        "api",
+        "solr",
+        "laravel"
+    ],
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "halaxa/json-machine": "^1.2",
         "laravel/framework": "^8.83",
+        "swagger-api/swagger-ui": "^5.18",
         "wotz/laravel-swagger-ui": "^0.7"
     },
     "require-dev": {
@@ -28,7 +33,8 @@
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php -r \"@mkdir('public/vendor/swagger-ui', 0755, true); foreach (['swagger-ui.css', 'swagger-ui-bundle.js'] as \\$f) { copy('vendor/swagger-api/swagger-ui/dist/' . \\$f, 'public/vendor/swagger-ui/' . \\$f) || exit(1); }\""
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
@@ -51,7 +57,10 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.3.0"
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true

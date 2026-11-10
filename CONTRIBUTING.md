@@ -29,7 +29,7 @@ Releases und Tags legen nur Menschen an. Versioniert wird nach [SemVer](https://
 
 Zuerst in der Testumgebung, danach mit demselben Release-Tag in der Produktion. Produktiv läuft immer ein Release-Tag, nie `main`.
 
-Voraussetzungen auf dem Server: PHP >= 7.3 (empfohlen 8.3) mit den von Laravel 8 benötigten Extensions, Composer sowie ein Webserver (Apache/nginx), dessen Document Root auf `public/` zeigt. Ein separater Solr-Index muss erreichbar sein; eine Datenbank wird nicht benötigt.
+Voraussetzungen auf dem Server: PHP 8.3 (dafür ist `composer.lock` aufgelöst) mit den von Laravel benötigten Extensions, Composer sowie ein Webserver (Apache/nginx), dessen Document Root auf `public/` zeigt. Der Webserver protokolliert IP-Adressen nur anonymisiert (IPv4 ohne letztes Oktett, IPv6 nur die ersten 48 Bit). Ein separater Solr-Index muss erreichbar sein; eine Datenbank wird nicht benötigt.
 
 ### Erstinstallation
 
@@ -37,7 +37,7 @@ Voraussetzungen auf dem Server: PHP >= 7.3 (empfohlen 8.3) mit den von Laravel 8
 git clone https://github.com/dla-marbach/dla-opac-dataservice.git
 cd dla-opac-dataservice
 git checkout v1.2.0   # aktuellsten Release-Tag einsetzen
-composer install --no-dev --optimize-autoloader
+composer install --no-dev --optimize-autoloader   # installiert nach composer.lock, kopiert die Swagger-UI-Assets
 cp .env.example .env
 chmod 600 .env
 ```
@@ -93,4 +93,5 @@ Der Datendienst hält keine eigenen Daten; der Solr-Index wird außerhalb dieses
 ## Projektspezifisch
 
 - Kein Container-Betrieb: Release, Deployment und Rollback wie oben statt Image, `compose.yaml` und ghcr.io. Entsprechend entfallen Image-Build, Image-Scan, Smoketest und der wöchentliche Scan des Release-Images.
+- Abhängigkeiten, auch die Swagger-UI-Assets, kommen per `composer install` aus `composer.lock`. Auf dem Server wird nichts von Hand kopiert oder geändert.
 - Zusätzlich zu Trivy prüft die CI den Code mit der Sicherheitsanalyse von Psalm (Ergebnisse unter „Security“ → „Code scanning“).
