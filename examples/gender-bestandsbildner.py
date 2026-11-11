@@ -162,12 +162,34 @@ def _(mo):
         value="Variante 2: alles außer Mediendokumentation und Einzelautographen",
         label="Voreinstellung Bestandstypen",
     )
+    OHNE_BESTANDSART = "(ohne Bestandsart)"
+    GRUPPE_SAMMLUNG = "Sammlungen getrennt ausweisen"
+    GRUPPE_BESTANDSART = "nach Bestandsart (categorySub)"
+    GRUPPE_KEINE = "keine Gruppierung"
     preset
-    return VARIANTE_1, VARIANTE_2_AUSSCHLUSS, preset
+    return (
+        GRUPPE_BESTANDSART,
+        GRUPPE_KEINE,
+        GRUPPE_SAMMLUNG,
+        OHNE_BESTANDSART,
+        VARIANTE_1,
+        VARIANTE_2_AUSSCHLUSS,
+        preset,
+    )
 
 
 @app.cell(hide_code=True)
-def _(VARIANTE_1, VARIANTE_2_AUSSCHLUSS, bf_raw, mo, preset):
+def _(
+    GRUPPE_BESTANDSART,
+    GRUPPE_KEINE,
+    GRUPPE_SAMMLUNG,
+    OHNE_BESTANDSART,
+    VARIANTE_1,
+    VARIANTE_2_AUSSCHLUSS,
+    bf_raw,
+    mo,
+    preset,
+):
     _all_categories = sorted(bf_raw["category"].dropna().unique().tolist())
     if preset.value.startswith("Variante 1"):
         _default = [c for c in _all_categories if c in VARIANTE_1]
@@ -178,13 +200,23 @@ def _(VARIANTE_1, VARIANTE_2_AUSSCHLUSS, bf_raw, mo, preset):
     )
 
     categories = mo.ui.multiselect(
-        options=_all_categories, value=_default, label="Bestandstypen (category)"
+        options=_all_categories, value=_default, label="Filter: Bestandstypen (category)"
     )
-    only_main = mo.ui.checkbox(value=True, label="nur Hauptbestände (parent_id_mv leer)")
+    sub_filter = mo.ui.multiselect(
+        options=[OHNE_BESTANDSART] + _sub_values,
+        value=[],
+        label="Filter: Bestandsarten (categorySub / categorySubSub) – leer = keine Einschränkung",
+    )
+    only_main = mo.ui.checkbox(value=True, label="Filter: nur Hauptbestände (parent_id_mv leer)")
+    grouping = mo.ui.dropdown(
+        options=[GRUPPE_SAMMLUNG, GRUPPE_BESTANDSART, GRUPPE_KEINE],
+        value=GRUPPE_SAMMLUNG,
+        label="Ergebnis gruppieren",
+    )
     collection_values = mo.ui.multiselect(
         options=_sub_values,
         value=[v for v in _sub_values if "sammlung" in v.lower()],
-        label="Als Sammlung getrennt ausweisen (categorySub / categorySubSub)",
+        label="Als Sammlung gelten (nur für Gruppierung „Sammlungen getrennt ausweisen“)",
     )
     counting = mo.ui.dropdown(
         options={
@@ -196,29 +228,58 @@ def _(VARIANTE_1, VARIANTE_2_AUSSCHLUSS, bf_raw, mo, preset):
         value="je Bestand: erste verknüpfte Person",
         label="Zählweise",
     )
-    mo.vstack([categories, only_main, collection_values, counting])
-    return categories, collection_values, counting, only_main
+    mo.vstack(
+        [
+            mo.md("### Auswahl der Bestände"),
+            categories,
+            sub_filter,
+            only_main,
+            mo.md("### Darstellung"),
+            grouping,
+            collection_values,
+            counting,
+        ]
+    )
+    return categories, collection_values, counting, grouping, only_main, sub_filter
 
 
 @app.cell
 def _(
+    GRUPPE_BESTANDSART,
+    GRUPPE_KEINE,
+    OHNE_BESTANDSART,
     bf_raw,
     categories,
     collection_values,
     gender_by_person,
+    grouping,
     name_by_person,
     only_main,
     pd,
+    sub_filter,
 ):
+    def matches_sub_filter(row):
+        if not sub_filter.value:
+            return True
+        values = {v for v in (row["categorySub"], row["categorySubSub"]) if isinstance(v, str)}
+        if not values:
+            return OHNE_BESTANDSART in sub_filter.value
+        return bool(values & set(sub_filter.value))
+
     def classify(row):
+        if grouping.value == GRUPPE_KEINE:
+            return "alle ausgewählten Bestände"
+        if grouping.value == GRUPPE_BESTANDSART:
+            return row["categorySub"] if isinstance(row["categorySub"], str) else OHNE_BESTANDSART
         if row["categorySub"] in collection_values.value or row["categorySubSub"] in collection_values.value:
             return "Sammlung"
-        return "Vor-/Nachlass, Autorenbibliothek u.a."
+        return "übrige Bestände (Vor-/Nachlass, Autorenbibliothek u.a.)"
 
     selection = bf_raw[bf_raw["category"].isin(categories.value)].copy()
     if only_main.value:
         selection = selection[selection["parent_id_mv"].str.len() == 0]
-    selection["Gruppe"] = selection.apply(classify, axis=1)
+    selection = selection[selection.apply(matches_sub_filter, axis=1)] if len(selection) else selection
+    selection["Gruppe"] = selection.apply(classify, axis=1) if len(selection) else pd.Series(dtype=str)
     selection["genders"] = selection["personAt_id_mv"].apply(
         lambda ids: [gender_by_person.get(p, "ohne Angabe") for p in ids]
     )
