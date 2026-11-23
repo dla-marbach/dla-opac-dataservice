@@ -1,4 +1,10 @@
 {
+  "name": "DLA Datendienst",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "remoteUser": "vscode",
   "forwardPorts": [8000, 8983],
   "portsAttributes": {
     "8000": { "label": "Laravel" },
@@ -8,5 +14,10 @@
   "postAttachCommand": {
     "solr": "bash solr-start.sh",
     "laravel": "php artisan serve"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": []
+    }
   }
 }

@@ -6,8 +6,8 @@
 
     <title>DLA Datendienst</title>
 
-    <!--<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@latest/swagger-ui.css">-->
-    <link href="{{ asset('css/swagger-ui.css') }}" rel="stylesheet">
+    {{-- Assets aus dem Composer-Paket swagger-api/swagger-ui, kopiert beim composer install --}}
+    <link href="{{ asset('vendor/swagger-ui/swagger-ui.css') }}" rel="stylesheet">
 
     <style>
         html {
@@ -27,7 +27,7 @@
 <body>
 <div id="swagger-ui"></div>
 
-<script src="{{ asset('js/swagger-ui-bundle.js') }}"></script>
+<script src="{{ asset('vendor/swagger-ui/swagger-ui-bundle.js') }}"></script>
 
 <script>
     window.onload = function () {
